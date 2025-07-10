@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ecg_app/views/pages/sign_up.dart';
+import 'package:ecg_app/views/pages/sign_up.dart';
 
 void main() {
   runApp(const MyApp());

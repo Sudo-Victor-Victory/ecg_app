@@ -29,6 +29,9 @@ final List<PageConfig> navbarPages = [
   ),
 ];
 
+// This widget is what handles the navbar logic after logging in
+// without the need of rebuilding the appbar.
+// tl;dr builds the appbar and the navbar thats shared between pages
 class WidgetTree extends StatelessWidget {
   const WidgetTree({super.key});
 

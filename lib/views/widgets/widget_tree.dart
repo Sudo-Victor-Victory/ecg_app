@@ -9,10 +9,15 @@ class PageConfig {
   final String title;
   final Color color;
   final Widget page;
+  final IconData icon;
+  final Text label;
+
   const PageConfig({
     required this.title,
     required this.color,
     required this.page,
+    required this.icon,
+    required this.label,
   });
 }
 
@@ -21,11 +26,16 @@ final List<PageConfig> navbarPages = [
     title: "Home page",
     color: const Color(0xFF086788),
     page: HomePage(appBarTitle: "Home page", appBarColor: Color(0xFF086788)),
+    icon: Icons.home,
+    label: Text("Home page"),
   ),
+
   PageConfig(
     title: "Profile page",
     color: Colors.green,
     page: const Center(child: Text("Profile page")),
+    icon: Icons.person,
+    label: Text("Profile page"),
   ),
 ];
 
@@ -49,11 +59,20 @@ class WidgetTree extends StatelessWidget {
             centerTitle: true,
             actions: [
               IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.dark_mode)),
+              IconButton(
+                onPressed: () {
+                  isDarkModeNotifier.value = !isDarkModeNotifier.value;
+                },
+                icon: const Icon(Icons.dark_mode),
+              ),
             ],
           ),
           body: config.page,
-          bottomNavigationBar: const NavbarWidget(),
+          bottomNavigationBar: NavbarWidget(
+            selectedIndex: selectedPage,
+            onDestinationSelected: (newSelectedPage) =>
+                selectedPageNotifier.value = newSelectedPage,
+          ),
         );
       },
     );

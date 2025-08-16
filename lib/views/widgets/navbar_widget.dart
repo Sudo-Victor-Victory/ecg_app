@@ -1,28 +1,24 @@
-import 'package:ecg_app/data/classes/notifiers.dart';
+import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
 class NavbarWidget extends StatelessWidget {
-  const NavbarWidget({super.key});
-
+  final int selectedIndex;
+  final ValueChanged<int> onDestinationSelected;
+  const NavbarWidget({
+    super.key,
+    required this.selectedIndex,
+    required this.onDestinationSelected,
+  });
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: selectedPageNotifier,
-      builder: (context, selectedPage, child) {
-        return NavigationBar(
-          destinations: [
-            NavigationDestination(icon: Icon(Icons.home), label: "Home"),
-            NavigationDestination(
-              icon: Icon(Icons.person),
-              label: "Profile page",
-            ),
-          ],
-          onDestinationSelected: (int value) {
-            selectedPageNotifier.value = value;
-          },
-          selectedIndex: selectedPage,
-        );
-      },
+    return NavigationBar(
+      destinations: [
+        for (var page in navbarPages)
+          NavigationDestination(icon: Icon(page.icon), label: page.title),
+      ],
+
+      selectedIndex: selectedIndex,
+      onDestinationSelected: onDestinationSelected,
     );
   }
 }

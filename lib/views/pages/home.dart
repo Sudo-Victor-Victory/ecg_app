@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({
+    super.key,
+    required this.appBarTitle,
+    required this.appBarColor,
+  });
+  final String appBarTitle;
+  final Color appBarColor;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -10,12 +16,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Home page"),
-        backgroundColor: Color(0xFF086788),
-      ),
-      body: Text("Hey"),
-    );
+    return Scaffold(body: Center(child: Text("You are on the home page")));
   }
 }

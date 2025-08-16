@@ -1,4 +1,4 @@
-import 'package:ecg_app/views/pages/home.dart';
+import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -21,11 +21,11 @@ class _SignUpPageState extends State<SignUpPage> {
           Text("Hi you are in the sign up page"),
           Center(
             child: FilledButton(
-              onPressed: () => Navigator.push(
+              onPressed: () => Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                   builder: (context) {
-                    return HomePage();
+                    return WidgetTree();
                   },
                 ),
               ),

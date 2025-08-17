@@ -1,7 +1,9 @@
+import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:ecg_app/views/pages/home.dart';
 import 'package:ecg_app/views/widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Defines params for navbarPages within navbar
 // without it, we would need to create a new navbar + buttons
@@ -60,10 +62,23 @@ class WidgetTree extends StatelessWidget {
             actions: [
               IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
               IconButton(
-                onPressed: () {
+                onPressed: () async {
+                  final SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.setBool(
+                    KConstants.brightnessKey,
+                    !isDarkModeNotifier.value,
+                  );
                   isDarkModeNotifier.value = !isDarkModeNotifier.value;
                 },
-                icon: const Icon(Icons.dark_mode),
+                icon: ValueListenableBuilder(
+                  valueListenable: isDarkModeNotifier,
+                  builder: (context, isDarkMode, child) {
+                    return Icon(
+                      isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    );
+                  },
+                ),
               ),
             ],
           ),

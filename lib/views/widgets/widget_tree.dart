@@ -1,7 +1,9 @@
+import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:ecg_app/views/pages/home.dart';
 import 'package:ecg_app/views/widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Defines params for navbarPages within navbar
 // without it, we would need to create a new navbar + buttons
@@ -9,10 +11,15 @@ class PageConfig {
   final String title;
   final Color color;
   final Widget page;
+  final IconData icon;
+  final Text label;
+
   const PageConfig({
     required this.title,
     required this.color,
     required this.page,
+    required this.icon,
+    required this.label,
   });
 }
 
@@ -21,11 +28,16 @@ final List<PageConfig> navbarPages = [
     title: "Home page",
     color: const Color(0xFF086788),
     page: HomePage(appBarTitle: "Home page", appBarColor: Color(0xFF086788)),
+    icon: Icons.home,
+    label: Text("Home page"),
   ),
+
   PageConfig(
     title: "Profile page",
     color: Colors.green,
     page: const Center(child: Text("Profile page")),
+    icon: Icons.person,
+    label: Text("Profile page"),
   ),
 ];
 
@@ -49,11 +61,33 @@ class WidgetTree extends StatelessWidget {
             centerTitle: true,
             actions: [
               IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.dark_mode)),
+              IconButton(
+                onPressed: () async {
+                  final SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.setBool(
+                    KConstants.brightnessKey,
+                    !isDarkModeNotifier.value,
+                  );
+                  isDarkModeNotifier.value = !isDarkModeNotifier.value;
+                },
+                icon: ValueListenableBuilder(
+                  valueListenable: isDarkModeNotifier,
+                  builder: (context, isDarkMode, child) {
+                    return Icon(
+                      isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    );
+                  },
+                ),
+              ),
             ],
           ),
           body: config.page,
-          bottomNavigationBar: const NavbarWidget(),
+          bottomNavigationBar: NavbarWidget(
+            selectedIndex: selectedPage,
+            onDestinationSelected: (newSelectedPage) =>
+                selectedPageNotifier.value = newSelectedPage,
+          ),
         );
       },
     );

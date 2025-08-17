@@ -5,8 +5,13 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class BleScanner extends StatefulWidget {
-  const BleScanner({super.key});
-
+  const BleScanner({
+    super.key,
+    required this.appBarTitle,
+    required this.appBarColor,
+  });
+  final String appBarTitle;
+  final Color appBarColor;
   @override
   State<BleScanner> createState() => _BleScannerState();
 }
@@ -181,7 +186,6 @@ class _BleScannerState extends State<BleScanner> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("BLE Scanner"),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _startScan),
         ],

@@ -1,6 +1,7 @@
 import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:ecg_app/views/pages/home.dart';
+import 'package:ecg_app/views/widgets/ble_scanner.dart';
 import 'package:ecg_app/views/widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,7 +32,16 @@ final List<PageConfig> navbarPages = [
     icon: Icons.home,
     label: Text("Home page"),
   ),
-
+  PageConfig(
+    title: "BLE devices",
+    color: const Color(0xFFF0C808),
+    page: BleScanner(
+      appBarColor: Color.fromARGB(255, 206, 157, 24),
+      appBarTitle: "Connect to ECG",
+    ),
+    icon: Icons.bluetooth,
+    label: Text("Bluetooth devices"),
+  ),
   PageConfig(
     title: "Profile page",
     color: Colors.green,

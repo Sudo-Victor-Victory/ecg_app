@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -31,13 +32,11 @@ class _BleScannerState extends State<BleScanner> {
   final String characteristicUuid = "33737322-fb5c-4a6f-a4d9-e41c1b20c30d";
 
   // List of data points that is being charted
-  BluetoothDevice? _connectedDevice;
 
   // Used to have change timestamps to be relative instead of esp32's absolute.
   int? startTimestampMs;
 
   double latestEcgTime = 0;
-  static const double fixedWindowSize = 2000.0;
 
   @override
   void initState() {
@@ -121,15 +120,15 @@ class _BleScannerState extends State<BleScanner> {
 
       print('Connecting to ${device.remoteId}');
       await device.connect(timeout: const Duration(seconds: 10));
-      print('Connected to ${device.remoteId}');
-      setState(() {
-        _connectedDevice = device;
-      });
-      // Ensures that user is still on the same page after waiting to
-      // connect to the bluetooth device
       if (!mounted) {
         return;
       }
+      print('Connected to ${device.remoteId}');
+      print('Notifier BEFORE: ${connectedDevice.value}');
+      connectedDevice.value = DeviceWrapper(
+        device,
+      ); // always a new wrapper object
+      print('Notifier AFTER: ${connectedDevice.value}');
 
       List<BluetoothService> services = await device.discoverServices();
       BluetoothCharacteristic? targetCharacteristic;
@@ -144,10 +143,9 @@ class _BleScannerState extends State<BleScanner> {
           }
         }
       }
-      // Converts the received bytes from the ble notification
-      // and sends it to be processed by handleNotificaiton
+
       if (targetCharacteristic != null) {
-        await targetCharacteristic.setNotifyValue(true);
+        return;
       }
 
       showDialog(
@@ -179,26 +177,27 @@ class _BleScannerState extends State<BleScanner> {
 
   @override
   Widget build(BuildContext context) {
-    // Define the visible window using absolute time on ecgTime axis:
-    double maxX = latestEcgTime;
-    double minX = maxX - fixedWindowSize;
-    if (minX < 0) minX = 0;
-
-    return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _startScan),
-        ],
-      ),
-      body: _connectedDevice == null
-          ? (_bluetoothDevices.isEmpty
-                ? const Center(child: Text("No devices found."))
-                : ListView.builder(
-                    itemCount: _bluetoothDevices.length,
-                    itemBuilder: (_, index) =>
-                        _buildDeviceTile(_bluetoothDevices[index]),
-                  ))
-          : Text("Device connected ${_connectedDevice?.platformName}"),
+    return Column(
+      children: [
+        FilledButton(
+          onPressed: _startScan,
+          child: Text("Tap to scan"),
+          style: FilledButton.styleFrom(
+            minimumSize: Size(double.infinity, 50.0),
+            shape: RoundedRectangleBorder(),
+          ),
+        ),
+        if (_bluetoothDevices.isEmpty)
+          const Expanded(child: Center(child: Text("No devices found.")))
+        else
+          Expanded(
+            child: ListView.builder(
+              itemCount: _bluetoothDevices.length,
+              itemBuilder: (_, index) =>
+                  _buildDeviceTile(_bluetoothDevices[index]),
+            ),
+          ),
+      ],
     );
   }
 
@@ -244,10 +243,4 @@ class _BleScannerState extends State<BleScanner> {
       ),
     );
   }
-}
-
-class EcgPacket {
-  final List<int> samples;
-  final int timestamp;
-  EcgPacket(this.samples, this.timestamp);
 }

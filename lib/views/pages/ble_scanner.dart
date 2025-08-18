@@ -144,7 +144,7 @@ class _BleScannerState extends State<BleScanner> {
         }
       }
 
-      if (targetCharacteristic != null) {
+      if (targetCharacteristic != null || !mounted) {
         return;
       }
 
@@ -181,11 +181,11 @@ class _BleScannerState extends State<BleScanner> {
       children: [
         FilledButton(
           onPressed: _startScan,
-          child: Text("Tap to scan"),
           style: FilledButton.styleFrom(
             minimumSize: Size(double.infinity, 50.0),
             shape: RoundedRectangleBorder(),
           ),
+          child: Text("Tap to scan"),
         ),
         if (_bluetoothDevices.isEmpty)
           const Expanded(child: Center(child: Text("No devices found.")))

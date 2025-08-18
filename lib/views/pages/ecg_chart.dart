@@ -62,6 +62,10 @@ class _EcgChartState extends State<EcgChart> {
         );
       }
 
+      if (!mounted) {
+        return;
+      }
+
       showDialog(
         context: context,
         builder: (_) => AlertDialog(

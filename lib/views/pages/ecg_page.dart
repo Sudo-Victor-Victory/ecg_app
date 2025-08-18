@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 class EcgPage extends StatefulWidget {
   final Color appBarColor;
   final String appBarTitle;
+
   const EcgPage({
     super.key,
     required this.appBarColor,
@@ -27,6 +28,7 @@ class _EcgPageState extends State<EcgPage> {
         print('ValueListenableBuilder builder called with $wrapper');
 
         if (wrapper == null) {
+          // not connected → show scanner
           return Scaffold(
             body: BleScanner(
               appBarColor: widget.appBarColor,
@@ -35,12 +37,8 @@ class _EcgPageState extends State<EcgPage> {
           );
         }
 
-        return Scaffold(
-          body: EcgChart(
-            key: ValueKey(wrapper.device),
-            ecgDevice: wrapper.device,
-          ),
-        );
+        // connected → just show the chart
+        return Scaffold(body: const EcgChart());
       },
     );
   }

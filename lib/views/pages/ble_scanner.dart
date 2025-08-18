@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:ecg_app/data/classes/notifiers.dart';
+import 'package:ecg_app/views/widgets/ble_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -119,7 +120,8 @@ class _BleScannerState extends State<BleScanner> {
       }
 
       print('Connecting to ${device.remoteId}');
-      await device.connect(timeout: const Duration(seconds: 10));
+      // USes the ECGManager
+      await BleEcgManager().connect(device);
       if (!mounted) {
         return;
       }

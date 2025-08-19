@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:ecg_app/data/classes/notifiers.dart';
+import 'package:ecg_app/views/widgets/ble_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -119,16 +120,14 @@ class _BleScannerState extends State<BleScanner> {
       }
 
       print('Connecting to ${device.remoteId}');
-      await device.connect(timeout: const Duration(seconds: 10));
+      // Uses BleEcgManager to manage the connection
+      await BleEcgManager().connect(device);
       if (!mounted) {
         return;
       }
       print('Connected to ${device.remoteId}');
-      print('Notifier BEFORE: ${connectedDevice.value}');
-      connectedDevice.value = DeviceWrapper(
-        device,
-      ); // always a new wrapper object
-      print('Notifier AFTER: ${connectedDevice.value}');
+      // Used to circumvent ValueNotifier's same-object check
+      connectedDevice.value = DeviceWrapper(device);
 
       List<BluetoothService> services = await device.discoverServices();
       BluetoothCharacteristic? targetCharacteristic;

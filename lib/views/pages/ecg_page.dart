@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 class EcgPage extends StatefulWidget {
   final Color appBarColor;
   final String appBarTitle;
+
   const EcgPage({
     super.key,
     required this.appBarColor,
@@ -35,12 +36,7 @@ class _EcgPageState extends State<EcgPage> {
           );
         }
 
-        return Scaffold(
-          body: EcgChart(
-            key: ValueKey(wrapper.device),
-            ecgDevice: wrapper.device,
-          ),
-        );
+        return Scaffold(body: const EcgChart());
       },
     );
   }

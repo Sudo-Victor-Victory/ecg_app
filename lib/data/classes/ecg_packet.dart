@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 class EcgPacket {
+  // Currently is 24 bytes - 10 samples of 2 byte length
+  // and a 4 byte timestamp.
   final List<int> samples; // 10 samples
   final int timestamp; // 4-byte timestamp
 

@@ -120,17 +120,14 @@ class _BleScannerState extends State<BleScanner> {
       }
 
       print('Connecting to ${device.remoteId}');
-      // USes the ECGManager
+      // Uses BleEcgManager to manage the connection
       await BleEcgManager().connect(device);
       if (!mounted) {
         return;
       }
       print('Connected to ${device.remoteId}');
-      print('Notifier BEFORE: ${connectedDevice.value}');
-      connectedDevice.value = DeviceWrapper(
-        device,
-      ); // always a new wrapper object
-      print('Notifier AFTER: ${connectedDevice.value}');
+      // Used to circumvent ValueNotifier's same-object check
+      connectedDevice.value = DeviceWrapper(device);
 
       List<BluetoothService> services = await device.discoverServices();
       BluetoothCharacteristic? targetCharacteristic;

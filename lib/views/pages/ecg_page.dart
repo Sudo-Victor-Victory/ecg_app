@@ -28,7 +28,6 @@ class _EcgPageState extends State<EcgPage> {
         print('ValueListenableBuilder builder called with $wrapper');
 
         if (wrapper == null) {
-          // not connected → show scanner
           return Scaffold(
             body: BleScanner(
               appBarColor: widget.appBarColor,
@@ -37,7 +36,6 @@ class _EcgPageState extends State<EcgPage> {
           );
         }
 
-        // connected → just show the chart
         return Scaffold(body: const EcgChart());
       },
     );

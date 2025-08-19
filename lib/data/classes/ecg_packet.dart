@@ -21,7 +21,6 @@ class EcgPacket {
     );
 
     final timestamp = byteData.getUint32(20, Endian.little);
-    print(samples.toString());
     return EcgPacket(samples, timestamp);
   }
 }

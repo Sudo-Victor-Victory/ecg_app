@@ -12,16 +12,15 @@ class EcgChart extends StatefulWidget {
 }
 
 class _EcgChartState extends State<EcgChart> {
-  // BLE manager instance: manages connection & provides stream of ECG packets
+  // Manages connection & exposes ECG data stream
   final BleEcgManager _bleManager = BleEcgManager();
 
-  // Listener for EcgPackets
   late StreamSubscription<EcgPacket> _ecgSub;
 
   // Buffer for data when chart controller is not initialized.
   final List<EcgPacket> _packetBuffer = [];
 
-  // Source of truth for our chart
+  // Source of truth for our chart - is our current data within the chart.
   List<EcgDataPoint> ecgDataPoints = [];
 
   // Interacts with Syncfusion chart to update chart in real time
@@ -29,6 +28,8 @@ class _EcgChartState extends State<EcgChart> {
 
   static const double fixedWindowSize = 2000.0;
   double latestEcgTime = 0;
+
+  // Max value from ECG
   int globalEcgMax = 4096;
 
   @override
@@ -42,11 +43,12 @@ class _EcgChartState extends State<EcgChart> {
 
   @override
   void dispose() {
+    // Cancels stream to avoid memory leaks.
     _ecgSub.cancel();
     super.dispose();
   }
 
-  // Verifies controller iss initialized.
+  // If the chart isn't ready yet, buffer packets for later processing
   void _addPacket(EcgPacket packet) {
     if (_chartSeriesController == null) {
       _packetBuffer.add(packet);
@@ -60,6 +62,7 @@ class _EcgChartState extends State<EcgChart> {
   void _processPacket(EcgPacket packet) {
     setState(() {
       for (int i = 0; i < packet.samples.length; i++) {
+        // ECGs are sampled every 4ms from the ESP32.
         final time = packet.timestamp + i * 4;
         final value = globalEcgMax - packet.samples[i].toDouble();
 
@@ -114,7 +117,7 @@ class _EcgChartState extends State<EcgChart> {
           // Absolutely necessary for real-time charting
           onRendererCreated: (controller) {
             _chartSeriesController = controller;
-            // Flush buffered packets
+            // Flush buffered packets and add them into the chart
             for (final packet in _packetBuffer) {
               _processPacket(packet);
             }

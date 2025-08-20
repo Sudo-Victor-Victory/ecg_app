@@ -64,7 +64,7 @@ class _EcgChartState extends State<EcgChart> {
       for (int i = 0; i < packet.samples.length; i++) {
         // ECGs are sampled every 4ms from the ESP32.
         final time = packet.timestamp + i * 4;
-        final value = globalEcgMax - packet.samples[i].toDouble();
+        final value = packet.samples[i].toDouble();
 
         ecgDataPoints.add(EcgDataPoint(time.toDouble(), value));
         // Update `latestEcgTime` to reflect most recent ecgTime value

@@ -60,6 +60,7 @@ class _BleScannerState extends State<BleScanner> {
         print("Bluetooth is not ON");
       }
     } catch (e) {
+      // add some handeling for BLE init error.
       print("BLE init error: $e");
     }
   }
@@ -105,6 +106,7 @@ class _BleScannerState extends State<BleScanner> {
 
   @override
   void dispose() {
+    // add an if in here
     // Stops the stream from receiving updates.
     _scanSubscription.cancel();
     // Stops the bluetooth scan.

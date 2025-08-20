@@ -12,34 +12,44 @@ class EcgStatusWidget extends StatelessWidget {
       builder: (context, device, _) {
         final bool isConnected = device != null;
 
-        return Material(
-          color: isConnected ? Colors.tealAccent : Colors.grey.shade300,
-          child: InkWell(
-            onTap: () {
-              connectedDevice.value = null;
-              BleEcgManager().disconnect();
-              selectedPageNotifier.value = 1;
-            },
-            splashColor: Colors.blue,
+        return Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: Colors.teal, width: 3),
+              bottom: BorderSide(color: Colors.teal, width: 3),
+            ),
+          ),
 
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  isConnected
-                      ? device.device.platformName
-                      : "No connected device",
-                  style: const TextStyle(fontSize: 24),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(width: 4),
+          child: Material(
+            color: isConnected ? Colors.tealAccent : Colors.grey.shade300,
 
-                Icon(
-                  Icons.circle,
-                  color: isConnected ? Colors.green : Colors.red,
-                  size: 14,
-                ),
-              ],
+            child: InkWell(
+              onTap: () {
+                connectedDevice.value = null;
+                BleEcgManager().disconnect();
+                selectedPageNotifier.value = 1;
+              },
+              splashColor: Colors.blue,
+
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    isConnected
+                        ? device.device.platformName
+                        : "No connected device",
+                    style: const TextStyle(fontSize: 24),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(width: 4),
+
+                  Icon(
+                    Icons.circle,
+                    color: isConnected ? Colors.green : Colors.red,
+                    size: 14,
+                  ),
+                ],
+              ),
             ),
           ),
         );

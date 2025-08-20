@@ -24,21 +24,23 @@ class EcgStatusWidget extends StatelessWidget {
             color: isConnected ? Colors.tealAccent : Colors.grey.shade300,
 
             child: InkWell(
-              onTap: () {
-                connectedDevice.value = null;
-                BleEcgManager().disconnect();
-                selectedPageNotifier.value = 1;
-              },
+              onTap: isConnected
+                  ? () {
+                      connectedDevice.value = null;
+                      BleEcgManager().disconnect();
+                      selectedPageNotifier.value = 1;
+                    }
+                  : null,
               splashColor: Colors.blue,
 
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
+                    style: TextStyle(color: Colors.red, fontSize: 24),
                     isConnected
                         ? device.device.platformName
                         : "No connected device",
-                    style: const TextStyle(fontSize: 24),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(width: 4),

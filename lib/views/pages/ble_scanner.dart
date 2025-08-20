@@ -24,10 +24,11 @@ class _BleScannerState extends State<BleScanner> {
 
   // Used to prevent the Bluetooth adapter from duplicating resources
   bool _isScanningForBluetoothDevices = false;
+  bool _bleSupported = true;
 
   // Subscription to asynchronously retreive List<ScanResult> which has
   // Bluetooth devices. Will be initialized on retrival of BLE devices.
-  late final StreamSubscription<List<ScanResult>> _scanSubscription;
+  StreamSubscription<List<ScanResult>>? _scanSubscription;
 
   final String serviceUuid = "b64cfb1e-045c-4975-89d6-65949bcb35aa";
   final String characteristicUuid = "33737322-fb5c-4a6f-a4d9-e41c1b20c30d";
@@ -48,6 +49,14 @@ class _BleScannerState extends State<BleScanner> {
   }
 
   Future<void> _initBle() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      print("This app only supports Android currently. Apologies");
+      setState(() => _bleSupported = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("App does not support current device")),
+      );
+      return;
+    }
     try {
       await _requestPermissions();
       // Allows us to scan for BLE dev. if the initial state
@@ -108,9 +117,12 @@ class _BleScannerState extends State<BleScanner> {
   void dispose() {
     // add an if in here
     // Stops the stream from receiving updates.
-    _scanSubscription.cancel();
+    _scanSubscription?.cancel();
     // Stops the bluetooth scan.
-    FlutterBluePlus.stopScan();
+    if (_bleSupported) {
+      FlutterBluePlus.stopScan();
+    }
+
     super.dispose();
   }
 
@@ -145,7 +157,7 @@ class _BleScannerState extends State<BleScanner> {
         }
       }
 
-      if (targetCharacteristic != null || !mounted) {
+      if (targetCharacteristic == null || !mounted) {
         return;
       }
 
@@ -188,7 +200,10 @@ class _BleScannerState extends State<BleScanner> {
           ),
           child: Text("Tap to scan"),
         ),
-        if (_bluetoothDevices.isEmpty)
+
+        if (_bleSupported == false)
+          const Expanded(child: Center(child: Text("App not compatable")))
+        else if (_bluetoothDevices.isEmpty)
           const Expanded(child: Center(child: Text("No devices found.")))
         else
           Expanded(

@@ -19,24 +19,42 @@ class EcgPage extends StatefulWidget {
 }
 
 class _EcgPageState extends State<EcgPage> {
+  // Function that the child will provide
+  VoidCallback? _startScan;
+
   @override
   Widget build(BuildContext context) {
-    print('EcgPage build called');
-
     return Scaffold(
       body: ValueListenableBuilder<DeviceWrapper?>(
         valueListenable: connectedDevice,
         builder: (context, wrapper, _) {
-          print('ValueListenableBuilder builder called with $wrapper');
-
           return Column(
             children: [
-              const EcgStatusWidget(),
+              Row(
+                children: [
+                  const Expanded(child: EcgStatusWidget()),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: wrapper == null
+                          ? () {
+                              _startScan?.call();
+                            }
+                          : () {
+                              connectedDevice.value = null;
+                            },
+                      child: Text(wrapper == null ? "Scan" : "Stop"),
+                    ),
+                  ),
+                ],
+              ),
               Expanded(
                 child: wrapper == null
                     ? BleScanner(
                         appBarColor: widget.appBarColor,
                         appBarTitle: widget.appBarTitle,
+                        onScanProvided: (scan) {
+                          _startScan = scan;
+                        },
                       )
                     : const EcgChart(),
               ),

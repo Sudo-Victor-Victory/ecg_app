@@ -11,9 +11,11 @@ class BleScanner extends StatefulWidget {
     super.key,
     required this.appBarTitle,
     required this.appBarColor,
+    this.onScanProvided,
   });
   final String appBarTitle;
   final Color appBarColor;
+  final void Function(VoidCallback scan)? onScanProvided;
   @override
   State<BleScanner> createState() => _BleScannerState();
 }
@@ -45,7 +47,10 @@ class _BleScannerState extends State<BleScanner> {
     super.initState();
     // Calls initBLE after Widget Tree has finished being built.
     // Without it, the BLE util will be inaccessible & cause errors.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initBle());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onScanProvided?.call(_startScan);
+      _initBle();
+    });
   }
 
   Future<void> _initBle() async {
@@ -69,7 +74,6 @@ class _BleScannerState extends State<BleScanner> {
         print("Bluetooth is not ON");
       }
     } catch (e) {
-      // add some handeling for BLE init error.
       print("BLE init error: $e");
     }
   }
@@ -115,7 +119,6 @@ class _BleScannerState extends State<BleScanner> {
 
   @override
   void dispose() {
-    // add an if in here
     // Stops the stream from receiving updates.
     _scanSubscription?.cancel();
     // Stops the bluetooth scan.
@@ -192,15 +195,6 @@ class _BleScannerState extends State<BleScanner> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        FilledButton(
-          onPressed: _startScan,
-          style: FilledButton.styleFrom(
-            minimumSize: Size(double.infinity, 50.0),
-            shape: RoundedRectangleBorder(),
-          ),
-          child: Text("Tap to scan"),
-        ),
-
         if (_bleSupported == false)
           const Expanded(child: Center(child: Text("App not compatable")))
         else if (_bluetoothDevices.isEmpty)

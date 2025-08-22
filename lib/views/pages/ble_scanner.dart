@@ -164,9 +164,12 @@ class _BleScannerState extends State<BleScanner> {
         return;
       }
 
+      if (!mounted) {
+        return;
+      }
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(
+        builder: (dialogContext) => AlertDialog(
           title: const Text('Connected'),
           content: SizedBox(
             width: 200.0,
@@ -175,7 +178,7 @@ class _BleScannerState extends State<BleScanner> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('OK'),
             ),
           ],

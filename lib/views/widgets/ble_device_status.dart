@@ -29,13 +29,13 @@ class EcgStatusWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  style: TextStyle(color: Colors.red, fontSize: 24),
+                  style: TextStyle(color: Colors.red, fontSize: 14),
                   isConnected
                       ? device.device.platformName
                       : "No connected device",
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 2),
 
                 Icon(
                   Icons.circle,

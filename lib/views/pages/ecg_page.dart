@@ -21,7 +21,7 @@ class EcgPage extends StatefulWidget {
 @override
 class _EcgPageState extends State<EcgPage> {
   VoidCallback? _startScan;
-
+  VoidCallback? _stopListening;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,6 +51,7 @@ class _EcgPageState extends State<EcgPage> {
                               }
                             : () {
                                 connectedDevice.value = null;
+                                _stopListening?.call();
                               },
                         child: Text(wrapper == null ? "Scan" : "Stop"),
                       ),
@@ -67,7 +68,11 @@ class _EcgPageState extends State<EcgPage> {
                           _startScan = scan;
                         },
                       )
-                    : const EcgChart(),
+                    : EcgChart(
+                        onDisconnect: (device) {
+                          _stopListening = device;
+                        },
+                      ),
               ),
             ],
           );

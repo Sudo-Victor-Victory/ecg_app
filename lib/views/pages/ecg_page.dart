@@ -18,8 +18,8 @@ class EcgPage extends StatefulWidget {
   State<EcgPage> createState() => _EcgPageState();
 }
 
+@override
 class _EcgPageState extends State<EcgPage> {
-  // Function that the child will provide
   VoidCallback? _startScan;
 
   @override
@@ -30,22 +30,33 @@ class _EcgPageState extends State<EcgPage> {
         builder: (context, wrapper, _) {
           return Column(
             children: [
-              Row(
-                children: [
-                  const Expanded(child: EcgStatusWidget()),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: wrapper == null
-                          ? () {
-                              _startScan?.call();
-                            }
-                          : () {
-                              connectedDevice.value = null;
-                            },
-                      child: Text(wrapper == null ? "Scan" : "Stop"),
+              SizedBox(
+                height: 45,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: EcgStatusWidget()),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: wrapper == null
+                            ? () {
+                                _startScan?.call();
+                              }
+                            : () {
+                                connectedDevice.value = null;
+                              },
+                        child: Text(wrapper == null ? "Scan" : "Stop"),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Expanded(
                 child: wrapper == null

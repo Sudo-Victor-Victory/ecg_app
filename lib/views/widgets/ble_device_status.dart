@@ -12,46 +12,37 @@ class EcgStatusWidget extends StatelessWidget {
       builder: (context, device, _) {
         final bool isConnected = device != null;
 
-        return Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: Colors.teal, width: 3),
-              bottom: BorderSide(color: Colors.teal, width: 3),
-            ),
-          ),
+        return Material(
+          color: isConnected ? Colors.tealAccent : Colors.grey.shade300,
 
-          child: Material(
-            color: isConnected ? Colors.tealAccent : Colors.grey.shade300,
+          child: InkWell(
+            onTap: isConnected
+                ? () {
+                    connectedDevice.value = null;
+                    BleEcgManager().disconnect();
+                    selectedPageNotifier.value = 1;
+                  }
+                : null,
+            splashColor: Colors.blue,
 
-            child: InkWell(
-              onTap: isConnected
-                  ? () {
-                      connectedDevice.value = null;
-                      BleEcgManager().disconnect();
-                      selectedPageNotifier.value = 1;
-                    }
-                  : null,
-              splashColor: Colors.blue,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  style: TextStyle(color: Colors.red, fontSize: 24),
+                  isConnected
+                      ? device.device.platformName
+                      : "No connected device",
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(width: 4),
 
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    style: TextStyle(color: Colors.red, fontSize: 24),
-                    isConnected
-                        ? device.device.platformName
-                        : "No connected device",
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(width: 4),
-
-                  Icon(
-                    Icons.circle,
-                    color: isConnected ? Colors.green : Colors.red,
-                    size: 14,
-                  ),
-                ],
-              ),
+                Icon(
+                  Icons.circle,
+                  color: isConnected ? Colors.green : Colors.red,
+                  size: 14,
+                ),
+              ],
             ),
           ),
         );

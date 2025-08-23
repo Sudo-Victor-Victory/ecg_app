@@ -70,16 +70,25 @@ class _EcgChartState extends State<EcgChart> {
   void _processPacket(EcgPacket packet) {
     setState(() {
       for (int i = 0; i < packet.samples.length; i++) {
-        // ECGs are sampled every 4ms from the ESP32.
-        final time = packet.timestamp + i * 4;
-        final value = packet.samples[i].toDouble();
+        // Timestamp in the EcgPacket are sent from the ESP32.
+        // They are collected every 4ms, and 10 are batched together.
+        // We collect the timestamp at the end. So every sample is 4ms off from
+        // the right.
+        // Lastly, BLE isn't 100% precise so data can arrive out of order,
+        // or delayed. We use latestEcgTime to attach a graphable timestamp.
+        double time = packet.timestamp - (packet.samples.length - 1 - i) * 4;
 
-        ecgDataPoints.add(EcgDataPoint(time.toDouble(), value));
-        // Update `latestEcgTime` to reflect most recent ecgTime value
-        latestEcgTime = time.toDouble();
+        // Enforce monotonic increasing timestamp (1 ms minimum increment)
+        if (time <= latestEcgTime) {
+          time = latestEcgTime + 1;
+        }
+        latestEcgTime = time;
+
+        final value = packet.samples[i].toDouble();
+        ecgDataPoints.add(EcgDataPoint(time, value));
       }
 
-      // Adds current ECG packet to the chart
+      // Add packet's time and ecg value to the chart
       _chartSeriesController?.updateDataSource(
         addedDataIndexes: List.generate(
           packet.samples.length,
@@ -87,17 +96,16 @@ class _EcgChartState extends State<EcgChart> {
         ),
       );
 
-      // Defines the left-most data to be removed from the chart
-      double cutoff = ecgDataPoints.last.ecgTime - fixedWindowSize;
-      // Removes (removedCount) number of elements from the left.
+      // Remove old points from ecgDataPoints
+      double cutoff = latestEcgTime - fixedWindowSize;
       int removedCount = ecgDataPoints.indexWhere((dp) => dp.ecgTime >= cutoff);
       removedCount = removedCount == -1 ? 0 : removedCount;
 
       if (removedCount > 0) {
-        ecgDataPoints.removeRange(0, removedCount);
         _chartSeriesController?.updateDataSource(
           removedDataIndexes: List.generate(removedCount, (i) => i),
         );
+        ecgDataPoints.removeRange(0, removedCount);
       }
     });
   }

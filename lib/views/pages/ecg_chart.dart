@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'package:ecg_app/data/classes/ecg_packet.dart';
 import 'package:ecg_app/views/widgets/ble_manager.dart';
 import 'package:flutter/material.dart';
@@ -13,62 +14,68 @@ class EcgChart extends StatefulWidget {
 }
 
 class _EcgChartState extends State<EcgChart> {
-  // Manages connection & exposes ECG data stream
   final BleEcgManager _bleManager = BleEcgManager();
-
   StreamSubscription<EcgPacket>? _ecgSub;
 
-  // Buffer for data when chart controller is not initialized.
-  final List<EcgPacket> _packetBuffer = [];
+  // Use a Queue for safer buffered packets
+  final Queue<EcgPacket> _packetBuffer = Queue<EcgPacket>();
 
-  // Source of truth for our chart - is our current data within the chart.
   List<EcgDataPoint> ecgDataPoints = [];
-
-  // Interacts with Syncfusion chart to update chart in real time
   ChartSeriesController? _chartSeriesController;
 
   static const double fixedWindowSize = 2000.0;
   double latestEcgTime = 0;
-
-  // Max value from ECG
   int globalEcgMax = 4096;
 
   @override
   void initState() {
     super.initState();
 
-    _ecgSub = _bleManager.ecgStream.listen((sample) {
-      _addPacket(sample);
+    // Listen to ECG stream
+    _ecgSub = _bleManager.ecgStream.listen((packet) {
+      if (!mounted) return;
+      _addPacket(packet);
     });
 
-    // Pass back the stop function to the parent
-    widget.onDisconnect?.call(() {
-      _ecgSub?.cancel();
-      _ecgSub = null;
-      _bleManager.disconnect();
+    // Pass stop function to parent safely after widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onDisconnect?.call(() {
+        _ecgSub?.cancel();
+        _ecgSub = null;
+        _bleManager.disconnect();
+      });
     });
   }
 
   @override
   void dispose() {
-    // Cancels stream to avoid memory leaks.
     _ecgSub?.cancel();
+    _packetBuffer.clear();
+    _chartSeriesController = null;
     super.dispose();
   }
 
-  // If the chart isn't ready yet, buffer packets for later processing
   void _addPacket(EcgPacket packet) {
+    if (!mounted) {
+      return;
+    }
+
     if (_chartSeriesController == null) {
       _packetBuffer.add(packet);
       return;
     }
+
     _processPacket(packet);
   }
 
   // Generates timestamps for each sample in a packet and uploads the data to
   // the chart
   void _processPacket(EcgPacket packet) {
+    if (!mounted) {
+      return;
+    }
     setState(() {
+      double lastX = ecgDataPoints.isEmpty ? 0 : ecgDataPoints.last.ecgTime;
       for (int i = 0; i < packet.samples.length; i++) {
         // Timestamp in the EcgPacket are sent from the ESP32.
         // They are collected every 4ms, and 10 are batched together.
@@ -78,17 +85,17 @@ class _EcgChartState extends State<EcgChart> {
         // or delayed. We use latestEcgTime to attach a graphable timestamp.
         double time = packet.timestamp - (packet.samples.length - 1 - i) * 4;
 
-        // Enforce monotonic increasing timestamp (1 ms minimum increment)
-        if (time <= latestEcgTime) {
-          time = latestEcgTime + 1;
+        // Ensure chart X increases smoothly
+        if (time <= lastX) {
+          time = lastX + 2; // or small increment
         }
-        latestEcgTime = time;
 
-        final value = packet.samples[i].toDouble();
-        ecgDataPoints.add(EcgDataPoint(time, value));
+        lastX = time;
+        latestEcgTime = time;
+        ecgDataPoints.add(EcgDataPoint(time, packet.samples[i].toDouble()));
       }
 
-      // Add packet's time and ecg value to the chart
+      // Update chart with new points
       _chartSeriesController?.updateDataSource(
         addedDataIndexes: List.generate(
           packet.samples.length,
@@ -96,7 +103,7 @@ class _EcgChartState extends State<EcgChart> {
         ),
       );
 
-      // Remove old points from ecgDataPoints
+      // Remove old points beyond window
       double cutoff = latestEcgTime - fixedWindowSize;
       int removedCount = ecgDataPoints.indexWhere((dp) => dp.ecgTime >= cutoff);
       removedCount = removedCount == -1 ? 0 : removedCount;
@@ -127,17 +134,17 @@ class _EcgChartState extends State<EcgChart> {
       series: [
         LineSeries<EcgDataPoint, double>(
           dataSource: ecgDataPoints,
-          xValueMapper: (EcgDataPoint dp, _) => dp.ecgTime,
-          yValueMapper: (EcgDataPoint dp, _) => dp.ecgValue,
+          xValueMapper: (dp, _) => dp.ecgTime,
+          yValueMapper: (dp, _) => dp.ecgValue,
           animationDuration: 0,
-          // Absolutely necessary for real-time charting
           onRendererCreated: (controller) {
+            if (!mounted) return;
             _chartSeriesController = controller;
-            // Flush buffered packets and add them into the chart
-            for (final packet in _packetBuffer) {
-              _processPacket(packet);
+
+            // Flush buffered packets safely
+            while (_packetBuffer.isNotEmpty) {
+              _processPacket(_packetBuffer.removeFirst());
             }
-            _packetBuffer.clear();
           },
           color: const Color.fromARGB(255, 228, 10, 10),
         ),

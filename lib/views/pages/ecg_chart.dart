@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class EcgChart extends StatefulWidget {
-  const EcgChart({super.key});
+  final void Function(VoidCallback scan)? onDisconnect;
+  const EcgChart({super.key, this.onDisconnect});
 
   @override
   State<EcgChart> createState() => _EcgChartState();
@@ -15,7 +16,7 @@ class _EcgChartState extends State<EcgChart> {
   // Manages connection & exposes ECG data stream
   final BleEcgManager _bleManager = BleEcgManager();
 
-  late StreamSubscription<EcgPacket> _ecgSub;
+  StreamSubscription<EcgPacket>? _ecgSub;
 
   // Buffer for data when chart controller is not initialized.
   final List<EcgPacket> _packetBuffer = [];
@@ -39,12 +40,19 @@ class _EcgChartState extends State<EcgChart> {
     _ecgSub = _bleManager.ecgStream.listen((sample) {
       _addPacket(sample);
     });
+
+    // Pass back the stop function to the parent
+    widget.onDisconnect?.call(() {
+      _ecgSub?.cancel();
+      _ecgSub = null;
+      _bleManager.disconnect();
+    });
   }
 
   @override
   void dispose() {
     // Cancels stream to avoid memory leaks.
-    _ecgSub.cancel();
+    _ecgSub?.cancel();
     super.dispose();
   }
 
@@ -64,7 +72,7 @@ class _EcgChartState extends State<EcgChart> {
       for (int i = 0; i < packet.samples.length; i++) {
         // ECGs are sampled every 4ms from the ESP32.
         final time = packet.timestamp + i * 4;
-        final value = globalEcgMax - packet.samples[i].toDouble();
+        final value = packet.samples[i].toDouble();
 
         ecgDataPoints.add(EcgDataPoint(time.toDouble(), value));
         // Update `latestEcgTime` to reflect most recent ecgTime value

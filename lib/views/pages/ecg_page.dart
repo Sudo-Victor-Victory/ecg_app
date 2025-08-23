@@ -1,6 +1,7 @@
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:ecg_app/views/pages/ble_scanner.dart';
 import 'package:ecg_app/views/pages/ecg_chart.dart';
+import 'package:ecg_app/views/widgets/ble_device_status.dart';
 import 'package:flutter/material.dart';
 
 class EcgPage extends StatefulWidget {
@@ -17,27 +18,66 @@ class EcgPage extends StatefulWidget {
   State<EcgPage> createState() => _EcgPageState();
 }
 
+@override
 class _EcgPageState extends State<EcgPage> {
+  VoidCallback? _startScan;
+  VoidCallback? _stopListening;
   @override
   Widget build(BuildContext context) {
-    print('EcgPage build called');
-
-    return ValueListenableBuilder<DeviceWrapper?>(
-      valueListenable: connectedDevice,
-      builder: (context, wrapper, _) {
-        print('ValueListenableBuilder builder called with $wrapper');
-
-        if (wrapper == null) {
-          return Scaffold(
-            body: BleScanner(
-              appBarColor: widget.appBarColor,
-              appBarTitle: widget.appBarTitle,
-            ),
+    return Scaffold(
+      body: ValueListenableBuilder<DeviceWrapper?>(
+        valueListenable: connectedDevice,
+        builder: (context, wrapper, _) {
+          return Column(
+            children: [
+              SizedBox(
+                height: 45,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: EcgStatusWidget()),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: wrapper == null
+                            ? () {
+                                _startScan?.call();
+                              }
+                            : () {
+                                connectedDevice.value = null;
+                                _stopListening?.call();
+                              },
+                        child: Text(wrapper == null ? "Scan" : "Stop"),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: wrapper == null
+                    ? BleScanner(
+                        appBarColor: widget.appBarColor,
+                        appBarTitle: widget.appBarTitle,
+                        onScanProvided: (scan) {
+                          _startScan = scan;
+                        },
+                      )
+                    : EcgChart(
+                        onDisconnect: (device) {
+                          _stopListening = device;
+                        },
+                      ),
+              ),
+            ],
           );
-        }
-
-        return Scaffold(body: const EcgChart());
-      },
+        },
+      ),
     );
   }
 }

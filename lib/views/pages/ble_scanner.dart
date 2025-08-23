@@ -11,9 +11,11 @@ class BleScanner extends StatefulWidget {
     super.key,
     required this.appBarTitle,
     required this.appBarColor,
+    this.onScanProvided,
   });
   final String appBarTitle;
   final Color appBarColor;
+  final void Function(VoidCallback scan)? onScanProvided;
   @override
   State<BleScanner> createState() => _BleScannerState();
 }
@@ -24,10 +26,11 @@ class _BleScannerState extends State<BleScanner> {
 
   // Used to prevent the Bluetooth adapter from duplicating resources
   bool _isScanningForBluetoothDevices = false;
+  bool _bleSupported = true;
 
   // Subscription to asynchronously retreive List<ScanResult> which has
   // Bluetooth devices. Will be initialized on retrival of BLE devices.
-  late final StreamSubscription<List<ScanResult>> _scanSubscription;
+  StreamSubscription<List<ScanResult>>? _scanSubscription;
 
   final String serviceUuid = "b64cfb1e-045c-4975-89d6-65949bcb35aa";
   final String characteristicUuid = "33737322-fb5c-4a6f-a4d9-e41c1b20c30d";
@@ -44,10 +47,21 @@ class _BleScannerState extends State<BleScanner> {
     super.initState();
     // Calls initBLE after Widget Tree has finished being built.
     // Without it, the BLE util will be inaccessible & cause errors.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initBle());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onScanProvided?.call(_startScan);
+      _initBle();
+    });
   }
 
   Future<void> _initBle() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      print("This app only supports Android currently. Apologies");
+      setState(() => _bleSupported = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("App does not support current device")),
+      );
+      return;
+    }
     try {
       await _requestPermissions();
       // Allows us to scan for BLE dev. if the initial state
@@ -106,9 +120,12 @@ class _BleScannerState extends State<BleScanner> {
   @override
   void dispose() {
     // Stops the stream from receiving updates.
-    _scanSubscription.cancel();
+    _scanSubscription?.cancel();
     // Stops the bluetooth scan.
-    FlutterBluePlus.stopScan();
+    if (_bleSupported) {
+      FlutterBluePlus.stopScan();
+    }
+
     super.dispose();
   }
 
@@ -143,13 +160,16 @@ class _BleScannerState extends State<BleScanner> {
         }
       }
 
-      if (targetCharacteristic != null || !mounted) {
+      if (targetCharacteristic == null || !mounted) {
         return;
       }
 
+      if (!mounted) {
+        return;
+      }
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(
+        builder: (dialogContext) => AlertDialog(
           title: const Text('Connected'),
           content: SizedBox(
             width: 200.0,
@@ -158,7 +178,7 @@ class _BleScannerState extends State<BleScanner> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('OK'),
             ),
           ],
@@ -178,15 +198,9 @@ class _BleScannerState extends State<BleScanner> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        FilledButton(
-          onPressed: _startScan,
-          style: FilledButton.styleFrom(
-            minimumSize: Size(double.infinity, 50.0),
-            shape: RoundedRectangleBorder(),
-          ),
-          child: Text("Tap to scan"),
-        ),
-        if (_bluetoothDevices.isEmpty)
+        if (_bleSupported == false)
+          const Expanded(child: Center(child: Text("App not compatable")))
+        else if (_bluetoothDevices.isEmpty)
           const Expanded(child: Center(child: Text("No devices found.")))
         else
           Expanded(

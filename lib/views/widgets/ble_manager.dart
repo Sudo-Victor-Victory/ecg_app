@@ -6,13 +6,13 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 // Essentially a singleton that manages BLE connection to an ECG device.
 
-/*
-  - Connects / Disconnects from a single BLE ECG device
-  - Discovers the characteristic for ECG data and subscribes to notifications
-  - Parses bytes into EcgPacket objects
-  - Broadcats packets to listeners through ecgStream
-  - Expose connection status through ChangeNotifier
-*/
+///
+///- Connects / Disconnects from a single BLE ECG device
+///- Discovers the characteristic for ECG data and subscribes to notifications
+///- Parses bytes into EcgPacket objects
+///- Broadcats packets to listeners through ecgStream
+///- Expose connection status through ChangeNotifier
+///
 class BleEcgManager extends ChangeNotifier {
   // Singleton
   static final BleEcgManager _instance = BleEcgManager._internal();
@@ -59,8 +59,8 @@ class BleEcgManager extends ChangeNotifier {
     });
   }
 
-  // Necessary for system to be idempotent
-  // Disconnects from the device, cancels notifs, and resets connection bool.
+  /// Necessary for system to be idempotent
+  /// Disconnects from the device, cancels notifs, and resets connection bool.
   Future<void> disconnect() async {
     await _subscription?.cancel();
     _subscription = null;

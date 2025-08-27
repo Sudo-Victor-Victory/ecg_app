@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'package:ecg_app/data/classes/ecg_packet.dart';
 import 'package:ecg_app/views/widgets/ble_manager.dart';
 import 'package:flutter/material.dart';
@@ -13,123 +14,153 @@ class EcgChart extends StatefulWidget {
 }
 
 class _EcgChartState extends State<EcgChart> {
-  // Manages connection & exposes ECG data stream
+  // Manages all connection & disconnection logic
   final BleEcgManager _bleManager = BleEcgManager();
-
+  // Stream for receiving BLE data
   StreamSubscription<EcgPacket>? _ecgSub;
 
-  // Buffer for data when chart controller is not initialized.
-  final List<EcgPacket> _packetBuffer = [];
-
-  // Source of truth for our chart - is our current data within the chart.
-  List<EcgDataPoint> ecgDataPoints = [];
-
-  // Interacts with Syncfusion chart to update chart in real time
+  final Queue<EcgDataPoint> _unplottedEcgDataQueue = Queue<EcgDataPoint>();
+  // Points currently displayed on the chart
+  List<EcgDataPoint> plottedEcgData = [];
+  // Necessary to update Syncfusion's charts
   ChartSeriesController? _chartSeriesController;
 
-  static const double fixedWindowSize = 2000.0;
-  double latestEcgTime = 0;
+  // Chart config
+  // 2 seconds width of visible chart (in ms)
+  static const double chartWindowSizeMs = 2000.0;
+  // Time interval between samples (4ms → 250Hz sample rate)
+  static const double samplePeriodMs = 4.0;
+  // Number of samples to plot per 16ms timer tick (~60 fps screen refresh)
+  static const int samplesPerFrame = 4;
+  // Number of samples to accumulate before starting charting (~1s buffer)
+  static const int initialBufferSamples = 250;
 
-  // Max value from ECG
-  int globalEcgMax = 4096;
+  double latestEcgTime = 0;
+  Timer? _chartUpdateTimer;
+  // Used to contextualize timestamps and normalize them to 0 for charting.
+  double? _firstDeviceTimestamp;
 
   @override
   void initState() {
     super.initState();
 
-    _ecgSub = _bleManager.ecgStream.listen((sample) {
-      _addPacket(sample);
+    _ecgSub = _bleManager.ecgStream.listen((packet) {
+      _addPacketToQueue(packet);
+      _startProcessingByTimer();
     });
 
-    // Pass back the stop function to the parent
-    widget.onDisconnect?.call(() {
-      _ecgSub?.cancel();
-      _ecgSub = null;
-      _bleManager.disconnect();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onDisconnect?.call(() {
+        _ecgSub?.cancel();
+        _bleManager.disconnect();
+      });
     });
   }
 
   @override
   void dispose() {
-    // Cancels stream to avoid memory leaks.
     _ecgSub?.cancel();
+    _chartUpdateTimer?.cancel();
+    _unplottedEcgDataQueue.clear();
+    plottedEcgData.clear();
+    _chartSeriesController = null;
     super.dispose();
   }
 
-  // If the chart isn't ready yet, buffer packets for later processing
-  void _addPacket(EcgPacket packet) {
-    if (_chartSeriesController == null) {
-      _packetBuffer.add(packet);
-      return;
+  /// Deconstructs packet into individual samples EcgDataPoint(time & ecg value)
+  /// and adds them to _unplottedEcgDataQueue.
+  void _addPacketToQueue(EcgPacket packet) {
+    final n = packet.samples.length;
+    // Timestamp is gathered at packet generation (10 samples) at samplePeriodMs
+    // rate. So they are all samplePeriodMs apart.
+    final firstTimestamp =
+        packet.timestamp.toDouble() - (n - 1) * samplePeriodMs;
+
+    _firstDeviceTimestamp ??= firstTimestamp;
+
+    for (int i = 0; i < n; i++) {
+      final timestamp =
+          (firstTimestamp + i * samplePeriodMs) - _firstDeviceTimestamp!;
+      final ecgValue = packet.samples[i].clamp(0, 4096).toDouble();
+      _unplottedEcgDataQueue.add(EcgDataPoint(timestamp, ecgValue));
     }
-    _processPacket(packet);
   }
 
-  // Generates timestamps for each sample in a packet and uploads the data to
-  // the chart
-  void _processPacket(EcgPacket packet) {
-    setState(() {
-      for (int i = 0; i < packet.samples.length; i++) {
-        // ECGs are sampled every 4ms from the ESP32.
-        final time = packet.timestamp + i * 4;
-        final value = packet.samples[i].toDouble();
+  /// Removes left-most datapoints from the queue, adds it into the source of truth
+  /// and updates the chart with the recently added points
+  /// using a 2 second sliding window.
+  void _processQueuedPacket() {
+    int toAdd = 0;
 
-        ecgDataPoints.add(EcgDataPoint(time.toDouble(), value));
-        // Update `latestEcgTime` to reflect most recent ecgTime value
-        latestEcgTime = time.toDouble();
+    while (_unplottedEcgDataQueue.isNotEmpty && toAdd < samplesPerFrame) {
+      final dataPoint = _unplottedEcgDataQueue.removeFirst();
+      plottedEcgData.add(dataPoint);
+      latestEcgTime = dataPoint.ecgTime;
+      toAdd++;
+    }
+
+    if (toAdd == 0) {
+      return;
+    }
+
+    // Trim sliding window
+    final cutoff = latestEcgTime - chartWindowSizeMs;
+    while (plottedEcgData.isNotEmpty && plottedEcgData.first.ecgTime < cutoff) {
+      plottedEcgData.removeAt(0);
+    }
+    // Add the new data points into the chart
+    final startIndex = plottedEcgData.length - toAdd;
+    _chartSeriesController?.updateDataSource(
+      addedDataIndexes: List.generate(toAdd, (i) => startIndex + i),
+    );
+
+    // Used to refresh the chart to display changes.
+    setState(() {});
+  }
+
+  /// Calls _processQueuedPacket() within a 16ms duration for a smooth charting
+  /// experience.
+  /// tl;dr processes packets via timer to get a smooth chart instead of
+  /// whenever the ESP32 sends data over BLE.
+  void _startProcessingByTimer() {
+    if (_chartUpdateTimer?.isActive == true) {
+      return;
+    }
+
+    // 16 was chosen to get a 60fps screen refresh
+    _chartUpdateTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      if (!mounted || _unplottedEcgDataQueue.isEmpty) return;
+
+      // Soft start: wait until buffer has ~1s data
+      if (plottedEcgData.isEmpty &&
+          _unplottedEcgDataQueue.length < initialBufferSamples) {
+        return;
       }
 
-      // Adds current ECG packet to the chart
-      _chartSeriesController?.updateDataSource(
-        addedDataIndexes: List.generate(
-          packet.samples.length,
-          (i) => ecgDataPoints.length - packet.samples.length + i,
-        ),
-      );
-
-      // Defines the left-most data to be removed from the chart
-      double cutoff = ecgDataPoints.last.ecgTime - fixedWindowSize;
-      // Removes (removedCount) number of elements from the left.
-      int removedCount = ecgDataPoints.indexWhere((dp) => dp.ecgTime >= cutoff);
-      removedCount = removedCount == -1 ? 0 : removedCount;
-
-      if (removedCount > 0) {
-        ecgDataPoints.removeRange(0, removedCount);
-        _chartSeriesController?.updateDataSource(
-          removedDataIndexes: List.generate(removedCount, (i) => i),
-        );
-      }
+      _processQueuedPacket();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    double maxX = latestEcgTime;
-    double minX = (maxX - fixedWindowSize).clamp(0, double.infinity);
+    final double minX = (latestEcgTime < chartWindowSizeMs)
+        ? 0
+        : latestEcgTime - chartWindowSizeMs;
+    final double maxX = latestEcgTime;
 
     return SfCartesianChart(
       backgroundColor: Colors.black,
       plotAreaBorderWidth: 0,
       primaryXAxis: NumericAxis(minimum: minX, maximum: maxX, interval: 500),
-      primaryYAxis: NumericAxis(
-        minimum: 0,
-        maximum: globalEcgMax.toDouble(),
-        interval: 512,
-      ),
+      primaryYAxis: NumericAxis(minimum: 0, maximum: 4096, interval: 512),
       series: [
         LineSeries<EcgDataPoint, double>(
-          dataSource: ecgDataPoints,
-          xValueMapper: (EcgDataPoint dp, _) => dp.ecgTime,
-          yValueMapper: (EcgDataPoint dp, _) => dp.ecgValue,
+          dataSource: plottedEcgData,
+          xValueMapper: (dataPoint, _) => dataPoint.ecgTime,
+          yValueMapper: (dataPoint, _) => dataPoint.ecgValue,
           animationDuration: 0,
-          // Absolutely necessary for real-time charting
           onRendererCreated: (controller) {
             _chartSeriesController = controller;
-            // Flush buffered packets and add them into the chart
-            for (final packet in _packetBuffer) {
-              _processPacket(packet);
-            }
-            _packetBuffer.clear();
           },
           color: const Color.fromARGB(255, 228, 10, 10),
         ),
@@ -138,6 +169,7 @@ class _EcgChartState extends State<EcgChart> {
   }
 }
 
+// Used to encapsulate important data for charting
 class EcgDataPoint {
   final double ecgTime;
   final double ecgValue;

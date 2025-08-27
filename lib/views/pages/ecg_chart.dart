@@ -93,9 +93,9 @@ class _EcgChartState extends State<EcgChart> {
     int toAdd = 0;
 
     while (_unplottedEcgDataQueue.isNotEmpty && toAdd < samplesPerFrame) {
-      final dp = _unplottedEcgDataQueue.removeFirst();
-      plottedEcgData.add(dp);
-      latestEcgTime = dp.ecgTime;
+      final dataPoint = _unplottedEcgDataQueue.removeFirst();
+      plottedEcgData.add(dataPoint);
+      latestEcgTime = dataPoint.ecgTime;
       toAdd++;
     }
 
@@ -156,8 +156,8 @@ class _EcgChartState extends State<EcgChart> {
       series: [
         LineSeries<EcgDataPoint, double>(
           dataSource: plottedEcgData,
-          xValueMapper: (dp, _) => dp.ecgTime,
-          yValueMapper: (dp, _) => dp.ecgValue,
+          xValueMapper: (dataPoint, _) => dataPoint.ecgTime,
+          yValueMapper: (dataPoint, _) => dataPoint.ecgValue,
           animationDuration: 0,
           onRendererCreated: (controller) {
             _chartSeriesController = controller;

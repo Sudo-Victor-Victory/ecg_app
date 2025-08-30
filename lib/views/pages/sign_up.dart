@@ -12,6 +12,7 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPassword = TextEditingController();
+  bool passwordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -23,15 +24,33 @@ class _SignUpPageState extends State<SignUpPage> {
       body: Column(
         children: [
           Text("Hi you are in the sign up page"),
-          Text("Email?"),
           TextField(
             controller: controllerEmail,
             onEditingComplete: () => setState(() {}),
+            decoration: InputDecoration(
+              labelText: "Email address",
+              hintText: "Your email",
+            ),
           ),
-          Text("Password?"),
+
           TextField(
             controller: controllerPassword,
+            obscureText: !passwordVisible,
             onEditingComplete: () => setState(() {}),
+            decoration: InputDecoration(
+              hintText: "Enter your account's password",
+              labelText: "Password",
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() {
+                    passwordVisible = !passwordVisible;
+                  });
+                },
+                icon: Icon(
+                  passwordVisible ? Icons.visibility : Icons.visibility_off,
+                ),
+              ),
+            ),
           ),
           Center(
             child: FilledButton(

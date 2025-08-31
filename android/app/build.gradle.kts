@@ -19,12 +19,13 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-    flavorDimensions "env"
+    flavorDimensions += "env"
+
     productFlavors {
-        local {
-            dimension "env"
-            applicationIdSuffix ".local"
-            versionNameSuffix "-local"
+        create("local") {
+            dimension = "env"
+            applicationIdSuffix = ".local"
+            versionNameSuffix = "-local"
         }
     }
     

@@ -58,14 +58,17 @@ class _EcgChartState extends State<EcgChart> {
       _addToSupabaseBuffer(packet);
     });
 
+    // The definition of the onDisconnect callback ecg_page.dart uses.
+    // tl;dr runs when the user presses the stop button on the chart page.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onDisconnect?.call(() {
+        _endSupabaseSession();
         _ecgSub?.cancel();
         _bleManager.disconnect();
       });
     });
 
-    _initSupabaseConnection();
+    _initSupabaseSession();
   }
 
   @override
@@ -180,7 +183,7 @@ class _EcgChartState extends State<EcgChart> {
 
   /// Currently creates an ecg_session for ecg_packets to be sent into.
   /// Also begins flushinng of buffered data for supabase.
-  Future<void> _initSupabaseConnection() async {
+  Future<void> _initSupabaseSession() async {
     final client = Supabase.instance.client;
     final authResponse = await client.auth.refreshSession();
     print('Refreshed session: $authResponse');
@@ -243,6 +246,19 @@ class _EcgChartState extends State<EcgChart> {
       debugPrint("Supabase insert failed: $e");
       // re-queue data if insert fails
       _supabaseBuffer.insertAll(0, batch);
+    }
+  }
+
+  Future<void> _endSupabaseSession() async {
+    try {
+      final client = Supabase.instance.client;
+      await client
+          .from('ecg_session')
+          .update({'end_time': DateTime.now().toUtc().toIso8601String()})
+          .eq('id', currentSessionId!);
+      print("Session $currentSessionId has come to an end");
+    } catch (e) {
+      print("Error ending Supabase session: $e");
     }
   }
 }

@@ -217,6 +217,8 @@ class _EcgChartState extends State<EcgChart> {
     });
   }
 
+  /// Enqueues data from the ble stream into a dedicated queue to be
+  /// dequeued and inserted into the db at a later time.
   void _addToSupabaseBuffer(EcgPacket packet) {
     if (currentSessionId == null) return;
 
@@ -231,7 +233,8 @@ class _EcgChartState extends State<EcgChart> {
     }
   }
 
-  /// Attempts to write data within _supabaseBuffer to Supabase's db
+  /// Attempts to insert rows into ecg_data within _supabaseBuffer to Supabase's
+  /// table. Writes specifically in ecg_data
   Future<void> _flushSupabaseBuffer() async {
     if (_supabaseBuffer.isEmpty) return;
 
@@ -249,6 +252,8 @@ class _EcgChartState extends State<EcgChart> {
     }
   }
 
+  /// Updates row of currentSessionId (id in ecg_session) with the end time of
+  /// the session  (column end_time)
   Future<void> _endSupabaseSession() async {
     try {
       final client = Supabase.instance.client;

@@ -4,6 +4,7 @@ import 'package:ecg_app/data/classes/ecg_packet.dart';
 import 'package:ecg_app/views/widgets/ble_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EcgChart extends StatefulWidget {
   final void Function(VoidCallback scan)? onDisconnect;
@@ -14,6 +15,7 @@ class EcgChart extends StatefulWidget {
 }
 
 class _EcgChartState extends State<EcgChart> {
+  //                                              BLE logic variables
   // Manages all connection & disconnection logic
   final BleEcgManager _bleManager = BleEcgManager();
   // Stream for receiving BLE data
@@ -24,9 +26,11 @@ class _EcgChartState extends State<EcgChart> {
   List<EcgDataPoint> plottedEcgData = [];
   // Necessary to update Syncfusion's charts
   ChartSeriesController? _chartSeriesController;
+  double latestEcgTime = 0;
+  double? _firstDeviceTimestamp;
 
-  // Chart config
-  // 2 seconds width of visible chart (in ms)
+  //                                                Chart config variables
+  // 2 seconds width of visible chart
   static const double chartWindowSizeMs = 2000.0;
   // Time interval between samples (4ms → 250Hz sample rate)
   static const double samplePeriodMs = 4.0;
@@ -34,11 +38,15 @@ class _EcgChartState extends State<EcgChart> {
   static const int samplesPerFrame = 4;
   // Number of samples to accumulate before starting charting (~1s buffer)
   static const int initialBufferSamples = 250;
-
-  double latestEcgTime = 0;
   Timer? _chartUpdateTimer;
-  // Used to contextualize timestamps and normalize them to 0 for charting.
-  double? _firstDeviceTimestamp;
+
+  //                                                Supabase variables
+
+  final List<Map<String, dynamic>> _supabaseBuffer = [];
+  Timer? _supabaseFlushTimer;
+  String? currentSessionId;
+  static const int supabaseBatchSize = 200;
+  static const Duration supabaseFlushInterval = Duration(seconds: 10);
 
   @override
   void initState() {
@@ -47,29 +55,37 @@ class _EcgChartState extends State<EcgChart> {
     _ecgSub = _bleManager.ecgStream.listen((packet) {
       _addPacketToQueue(packet);
       _startProcessingByTimer();
+      _addToSupabaseBuffer(packet);
     });
 
+    // The definition of the onDisconnect callback ecg_page.dart uses.
+    // tl;dr runs when the user presses the stop button on the chart page.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onDisconnect?.call(() {
+        _endSupabaseSession();
         _ecgSub?.cancel();
         _bleManager.disconnect();
       });
     });
+
+    _initSupabaseSession();
   }
 
   @override
   void dispose() {
     _ecgSub?.cancel();
     _chartUpdateTimer?.cancel();
+    _supabaseFlushTimer?.cancel();
     _unplottedEcgDataQueue.clear();
     plottedEcgData.clear();
+    _supabaseBuffer.clear();
     _chartSeriesController = null;
     super.dispose();
   }
 
   /// Deconstructs packet into individual samples EcgDataPoint(time & ecg value)
   /// and adds them to _unplottedEcgDataQueue.
-  void _addPacketToQueue(EcgPacket packet) {
+  Future<void> _addPacketToQueue(EcgPacket packet) async {
     final n = packet.samples.length;
     // Timestamp is gathered at packet generation (10 samples) at samplePeriodMs
     // rate. So they are all samplePeriodMs apart.
@@ -102,7 +118,6 @@ class _EcgChartState extends State<EcgChart> {
     if (toAdd == 0) {
       return;
     }
-
     // Trim sliding window
     final cutoff = latestEcgTime - chartWindowSizeMs;
     while (plottedEcgData.isNotEmpty && plottedEcgData.first.ecgTime < cutoff) {
@@ -113,7 +128,6 @@ class _EcgChartState extends State<EcgChart> {
     _chartSeriesController?.updateDataSource(
       addedDataIndexes: List.generate(toAdd, (i) => startIndex + i),
     );
-
     // Used to refresh the chart to display changes.
     setState(() {});
   }
@@ -126,7 +140,6 @@ class _EcgChartState extends State<EcgChart> {
     if (_chartUpdateTimer?.isActive == true) {
       return;
     }
-
     // 16 was chosen to get a 60fps screen refresh
     _chartUpdateTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       if (!mounted || _unplottedEcgDataQueue.isEmpty) return;
@@ -166,6 +179,92 @@ class _EcgChartState extends State<EcgChart> {
         ),
       ],
     );
+  }
+
+  /// Currently creates an ecg_session for ecg_packets to be sent into.
+  /// Also begins flushinng of buffered data for supabase.
+  Future<void> _initSupabaseSession() async {
+    final client = Supabase.instance.client;
+    final authResponse = await client.auth.refreshSession();
+    print('Refreshed session: $authResponse');
+
+    final user = client.auth.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated or session expired');
+    }
+
+    final userId = user.id;
+    print('Authenticated user ID: $userId');
+
+    try {
+      // Uses insert to create a new session and is followed by
+      // select to immediately get the session id for insertion in ecg_data.
+      final insertedSession = await client
+          .from('ecg_session')
+          .insert({'user_id': userId})
+          .select()
+          .single();
+
+      currentSessionId = insertedSession['id'] as String;
+      print('Inserted ECG session: $insertedSession');
+    } catch (e) {
+      print('Error inserting ECG session: $e');
+      rethrow;
+    }
+
+    _supabaseFlushTimer = Timer.periodic(supabaseFlushInterval, (_) {
+      _flushSupabaseBuffer();
+    });
+  }
+
+  /// Enqueues data from the ble stream into a dedicated queue to be
+  /// dequeued and inserted into the db at a later time.
+  void _addToSupabaseBuffer(EcgPacket packet) {
+    if (currentSessionId == null) return;
+
+    _supabaseBuffer.add({
+      'session_id': currentSessionId,
+      'timestamp_ms': packet.timestamp,
+      'ecg_data': packet.samples,
+    });
+
+    if (_supabaseBuffer.length >= supabaseBatchSize) {
+      _flushSupabaseBuffer();
+    }
+  }
+
+  /// Attempts to insert rows into ecg_data within _supabaseBuffer to Supabase's
+  /// table. Writes specifically in ecg_data
+  Future<void> _flushSupabaseBuffer() async {
+    if (_supabaseBuffer.isEmpty) return;
+
+    final client = Supabase.instance.client;
+    final batch = List<Map<String, dynamic>>.from(_supabaseBuffer);
+    _supabaseBuffer.clear();
+
+    try {
+      await client.from('ecg_data').insert(batch);
+      print("Inserted ${batch.length} ECG rows");
+    } catch (e) {
+      debugPrint("Supabase insert failed: $e");
+      // re-queue data if insert fails
+      _supabaseBuffer.insertAll(0, batch);
+    }
+  }
+
+  /// Updates row of currentSessionId (id in ecg_session) with the end time of
+  /// the session  (column end_time)
+  Future<void> _endSupabaseSession() async {
+    try {
+      final client = Supabase.instance.client;
+      await client
+          .from('ecg_session')
+          .update({'end_time': DateTime.now().toUtc().toIso8601String()})
+          .eq('id', currentSessionId!);
+      print("Session $currentSessionId has come to an end");
+    } catch (e) {
+      print("Error ending Supabase session: $e");
+    }
   }
 }
 

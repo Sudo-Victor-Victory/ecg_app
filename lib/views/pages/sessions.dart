@@ -1,3 +1,4 @@
+import 'package:ecg_app/views/widgets/historical_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,6 +19,7 @@ class _SessionsState extends State<Sessions> {
     getSessionsFromSupabase();
   }
 
+  /// Returns all sessions from Supabase that the user owns.
   void getSessionsFromSupabase() async {
     var receivedSessions = await client
         .from('ecg_session')
@@ -54,7 +56,18 @@ class _SessionsState extends State<Sessions> {
     final endTime = DateTime.parse(result["end_time"]).toLocal();
 
     return InkWell(
-      onTap: () => print(result["id"]),
+      onTap: () async {
+        print(result["id"]);
+        var idkMan = await getEcgData(result["id"]);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return HistoricalChart(ecgRows: idkMan);
+            },
+          ),
+        );
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: const BoxDecoration(
@@ -87,5 +100,14 @@ class _SessionsState extends State<Sessions> {
         ),
       ),
     );
+  }
+
+  /// Returns ecg_data rows of which have sessionId in the session_id column
+  Future<List<Map<String, dynamic>>> getEcgData(String sessionId) async {
+    final allDataFromSession = await client
+        .from('ecg_data')
+        .select('*')
+        .eq('session_id', sessionId);
+    return allDataFromSession;
   }
 }

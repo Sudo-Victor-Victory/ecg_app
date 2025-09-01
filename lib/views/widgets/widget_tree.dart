@@ -2,6 +2,7 @@ import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:ecg_app/views/pages/ecg_page.dart';
 import 'package:ecg_app/views/pages/home.dart';
+import 'package:ecg_app/views/pages/sessions.dart';
 import 'package:ecg_app/views/widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -48,6 +49,13 @@ final List<PageConfig> navbarPages = [
     page: const Center(child: Text("Profile page")),
     icon: Icons.person,
     label: Text("Profile page"),
+  ),
+  PageConfig(
+    title: "Chart from previous sessions",
+    color: const Color(0xFF07A0C3),
+    page: Sessions(),
+    icon: Icons.show_chart_sharp,
+    label: Text("idk what label was"),
   ),
 ];
 

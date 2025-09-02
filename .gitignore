@@ -46,3 +46,6 @@ app.*.map.json
 
 # Ask for launch config from me directly
 .vscode/launch.json
+macos/Flutter/GeneratedPluginRegistrant.swift
+linux/flutter/generated_plugins.cmake
+linux/flutter/generated_plugin_registrant.cc

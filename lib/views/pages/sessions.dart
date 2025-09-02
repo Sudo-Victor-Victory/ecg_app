@@ -58,12 +58,12 @@ class _SessionsState extends State<Sessions> {
     return InkWell(
       onTap: () async {
         print(result["id"]);
-        var idkMan = await getEcgData(result["id"]);
+        var ecgData = await getEcgData(result["id"]);
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) {
-              return HistoricalChart(ecgRows: idkMan);
+              return HistoricalChart(ecgRows: ecgData, startTime: startTime);
             },
           ),
         );

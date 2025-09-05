@@ -226,6 +226,7 @@ class _EcgChartState extends State<EcgChart> {
       'session_id': currentSessionId,
       'timestamp_ms': packet.timestamp,
       'ecg_data': packet.samples,
+      'bpm': packet.bpm,
     });
 
     if (_supabaseBuffer.length >= supabaseBatchSize) {

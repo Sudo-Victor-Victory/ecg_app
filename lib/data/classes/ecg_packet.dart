@@ -5,11 +5,12 @@ class EcgPacket {
   // and a 4 byte timestamp.
   final List<int> samples; // 10 samples
   final int timestamp; // 4-byte timestamp
+  final int bpm; // 2 byte bpm
 
-  EcgPacket(this.samples, this.timestamp);
+  EcgPacket(this.samples, this.timestamp, this.bpm);
 
   static EcgPacket? fromBytes(List<int> value) {
-    if (value.length != 24) {
+    if (value.length != 28) {
       print("Unexpected packet size: ${value.length}");
       return null;
     }
@@ -23,6 +24,10 @@ class EcgPacket {
     );
 
     final timestamp = byteData.getUint32(20, Endian.little);
-    return EcgPacket(samples, timestamp);
+
+    // Read bpm (bytes 24-25)
+    final bpm = byteData.getUint16(24, Endian.little);
+    print("BPM: $bpm");
+    return EcgPacket(samples, timestamp, bpm);
   }
 }

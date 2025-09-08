@@ -13,6 +13,9 @@ class _SessionsState extends State<Sessions> {
   final client = Supabase.instance.client;
   PostgrestList? supabaseSessions = [];
 
+  Map<String, dynamic>? selectedSession;
+  List<Map<String, dynamic>>? ecgData;
+
   @override
   void initState() {
     super.initState();
@@ -21,53 +24,66 @@ class _SessionsState extends State<Sessions> {
 
   /// Returns all sessions from Supabase that the user owns.
   void getSessionsFromSupabase() async {
-    var receivedSessions = await client
+    final receivedSessions = await client
         .from('ecg_session')
         .select("*")
         .order('start_time', ascending: false);
-    for (var row in supabaseSessions!) {
-      print(row);
-    }
+
+    setState(() => supabaseSessions = receivedSessions);
+  }
+
+  Future<void> selectSession(Map<String, dynamic> session) async {
+    final rows = await client
+        .from('ecg_data')
+        .select('*')
+        .eq('session_id', session['id']);
+
     setState(() {
-      supabaseSessions = receivedSessions;
+      selectedSession = session;
+      ecgData = rows;
+    });
+  }
+
+  void clearSelection() {
+    setState(() {
+      selectedSession = null;
+      ecgData = null;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    List<PostgrestMap>? idk = supabaseSessions?.toList();
-    return Column(
-      children: [
-        Expanded(
-          child: (idk != null && idk.isEmpty)
-              ? Center(child: Text("Sorry no data"))
-              : ListView.builder(
-                  itemCount: idk?.length,
-                  itemBuilder: (_, index) => _buildSessionTile(idk![index]),
-                ),
+    if (selectedSession != null && ecgData != null) {
+      final startTime = DateTime.parse(
+        selectedSession!["start_time"],
+      ).toLocal();
+      return Scaffold(
+        appBar: AppBar(
+          title: Text("Session ${startTime.toIso8601String()}"),
+          leading: BackButton(onPressed: clearSelection),
         ),
-      ],
+        body: HistoricalChart(ecgRows: ecgData!, startTime: startTime),
+      );
+    }
+
+    final rows = supabaseSessions?.toList() ?? [];
+    return Scaffold(
+      appBar: AppBar(title: const Text("Sessions")),
+      body: rows.isEmpty
+          ? const Center(child: Text("Sorry no data"))
+          : ListView.builder(
+              itemCount: rows.length,
+              itemBuilder: (_, index) => _buildSessionTile(rows[index]),
+            ),
     );
   }
 
-  /// Temporary tile.
   Widget _buildSessionTile(Map<String, dynamic> result) {
     final startTime = DateTime.parse(result["start_time"]).toLocal();
     final endTime = DateTime.parse(result["end_time"]).toLocal();
 
     return InkWell(
-      onTap: () async {
-        print(result["id"]);
-        var ecgData = await getEcgData(result["id"]);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return HistoricalChart(ecgRows: ecgData, startTime: startTime);
-            },
-          ),
-        );
-      },
+      onTap: () => selectSession(result),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: const BoxDecoration(
@@ -95,19 +111,10 @@ class _SessionsState extends State<Sessions> {
                 ],
               ),
             ),
-            const Icon(Icons.bluetooth),
+            const Icon(Icons.insert_chart),
           ],
         ),
       ),
     );
-  }
-
-  /// Returns ecg_data rows of which have sessionId in the session_id column
-  Future<List<Map<String, dynamic>>> getEcgData(String sessionId) async {
-    final allDataFromSession = await client
-        .from('ecg_data')
-        .select('*')
-        .eq('session_id', sessionId);
-    return allDataFromSession;
   }
 }

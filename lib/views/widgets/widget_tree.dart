@@ -14,7 +14,7 @@ class PageConfig {
   final Color color;
   final Widget page;
   final IconData icon;
-  final Text label;
+  final String label;
 
   const PageConfig({
     required this.title,
@@ -31,31 +31,31 @@ final List<PageConfig> navbarPages = [
     color: const Color(0xFF086788),
     page: HomePage(appBarTitle: "Home page", appBarColor: Color(0xFF086788)),
     icon: Icons.home,
-    label: Text("Home page"),
+    label: "Home",
   ),
   PageConfig(
-    title: "BLE devices",
+    title: "Connect to ECG Device",
     color: const Color(0xFFF0C808),
     page: EcgPage(
       appBarColor: Color.fromARGB(255, 206, 157, 24),
       appBarTitle: "Connect to ECG",
     ),
     icon: Icons.bluetooth,
-    label: Text("Bluetooth devices"),
+    label: "Bluetooth",
   ),
   PageConfig(
     title: "Profile page",
     color: Colors.green,
     page: const Center(child: Text("Profile page")),
     icon: Icons.person,
-    label: Text("Profile page"),
+    label: "Profile",
   ),
   PageConfig(
-    title: "Chart from previous sessions",
+    title: "Sessions",
     color: const Color(0xFF07A0C3),
     page: Sessions(),
     icon: Icons.show_chart_sharp,
-    label: Text("idk what label was"),
+    label: "ECG Sessions",
   ),
 ];
 
@@ -101,10 +101,13 @@ class WidgetTree extends StatelessWidget {
             ],
           ),
           body: config.page,
-          bottomNavigationBar: NavbarWidget(
-            selectedIndex: selectedPage,
-            onDestinationSelected: (newSelectedPage) =>
-                selectedPageNotifier.value = newSelectedPage,
+          bottomNavigationBar: SizedBox(
+            height: 120,
+            child: NavbarWidget(
+              selectedIndex: selectedPage,
+              onDestinationSelected: (newSelectedPage) =>
+                  selectedPageNotifier.value = newSelectedPage,
+            ),
           ),
         );
       },

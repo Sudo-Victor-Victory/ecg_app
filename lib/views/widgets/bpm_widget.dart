@@ -1,4 +1,3 @@
-import 'package:ecg_app/data/classes/ecg_packet.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:flutter/material.dart';
 
@@ -16,12 +15,12 @@ class _BpmWidgetState extends State<BpmWidget> {
       valueListenable: bpm,
       builder: (context, newBpm, child) {
         return Card(
-          elevation: 12,
           color: Colors.cyanAccent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadiusGeometry.circular(120.0),
+            borderRadius: BorderRadiusGeometry.circular(1),
+            side: BorderSide(color: Colors.redAccent, width: 2),
           ),
-          child: Text("💖 BPM: $newBpm   "),
+          child: Text(" 💖 BPM: $newBpm   "),
         );
       },
     );

@@ -165,27 +165,41 @@ class _EcgChartState extends State<EcgChart> {
 
     return Stack(
       children: <Widget>[
-        SfCartesianChart(
-          backgroundColor: Colors.black,
-          plotAreaBorderWidth: 0,
-          primaryXAxis: NumericAxis(
-            minimum: minX,
-            maximum: maxX,
-            interval: 500,
-          ),
-          primaryYAxis: NumericAxis(minimum: 0, maximum: 4096, interval: 512),
-          series: [
-            LineSeries<EcgDataPoint, double>(
-              dataSource: plottedEcgData,
-              xValueMapper: (dataPoint, _) => dataPoint.ecgTime,
-              yValueMapper: (dataPoint, _) => dataPoint.ecgValue,
-              animationDuration: 0,
-              onRendererCreated: (controller) {
-                _chartSeriesController = controller;
-              },
-              color: const Color.fromARGB(255, 228, 10, 10),
+        SafeArea(
+          child: Container(
+            color: Colors.black,
+            padding: const EdgeInsets.only(top: 20),
+            child: SizedBox(
+              height: 800,
+              child: SfCartesianChart(
+                backgroundColor: Colors.black,
+                plotAreaBorderWidth: 0,
+                margin: EdgeInsets.all(15),
+                primaryXAxis: NumericAxis(
+                  minimum: minX,
+                  maximum: maxX,
+                  interval: 500,
+                ),
+                primaryYAxis: NumericAxis(
+                  minimum: 0,
+                  maximum: 4096,
+                  interval: 512,
+                ),
+                series: [
+                  LineSeries<EcgDataPoint, double>(
+                    dataSource: plottedEcgData,
+                    xValueMapper: (dataPoint, _) => dataPoint.ecgTime,
+                    yValueMapper: (dataPoint, _) => dataPoint.ecgValue,
+                    animationDuration: 0,
+                    onRendererCreated: (controller) {
+                      _chartSeriesController = controller;
+                    },
+                    color: const Color.fromARGB(255, 228, 10, 10),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
         Positioned(top: -5, right: 40, child: BpmWidget()),
       ],

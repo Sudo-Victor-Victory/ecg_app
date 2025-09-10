@@ -33,15 +33,43 @@ class _SessionsState extends State<Sessions> {
   }
 
   Future<void> selectSession(Map<String, dynamic> session) async {
-    final rows = await client
-        .from('ecg_data')
-        .select('*')
-        .eq('session_id', session['id']);
+    final allRows = await fetchAllEcgRows(client, session['id']);
+    print("Fetched ${allRows.length} rows for session ${session['id']}");
+    print(allRows.length);
 
     setState(() {
       selectedSession = session;
-      ecgData = rows;
+      ecgData = allRows;
     });
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAllEcgRows(
+    SupabaseClient client,
+    String sessionId,
+  ) async {
+    const int pageSize = 1000;
+    int from = 0;
+    int to = pageSize - 1;
+    List<Map<String, dynamic>> allRows = [];
+
+    while (true) {
+      final chunk = await client
+          .from('ecg_data')
+          .select('*')
+          .eq('session_id', sessionId)
+          .range(from, to);
+
+      if (chunk.isEmpty) break;
+
+      allRows.addAll(chunk);
+
+      if (chunk.length < pageSize) break; // no more rows
+
+      from += pageSize;
+      to += pageSize;
+    }
+
+    return allRows;
   }
 
   void clearSelection() {

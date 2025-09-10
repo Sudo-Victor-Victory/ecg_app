@@ -4,6 +4,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 ValueNotifier<bool> isDarkModeNotifier = ValueNotifier(true);
 ValueNotifier<int> selectedPageNotifier = ValueNotifier(0);
 ValueNotifier<DeviceWrapper?> connectedDevice = ValueNotifier(null);
+ValueNotifier<int> bpm = ValueNotifier(0);
 
 class DeviceWrapper {
   final BluetoothDevice device;

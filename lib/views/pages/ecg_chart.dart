@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:ecg_app/data/classes/ecg_packet.dart';
+import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:ecg_app/views/widgets/ble_manager.dart';
+import 'package:ecg_app/views/widgets/bpm_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,7 +30,6 @@ class _EcgChartState extends State<EcgChart> {
   ChartSeriesController? _chartSeriesController;
   double latestEcgTime = 0;
   double? _firstDeviceTimestamp;
-
   //                                                Chart config variables
   // 2 seconds width of visible chart
   static const double chartWindowSizeMs = 2000.0;
@@ -100,6 +101,7 @@ class _EcgChartState extends State<EcgChart> {
       final ecgValue = packet.samples[i].clamp(0, 4096).toDouble();
       _unplottedEcgDataQueue.add(EcgDataPoint(timestamp, ecgValue));
     }
+    updateBPM(packet);
   }
 
   /// Removes left-most datapoints from the queue, adds it into the source of truth
@@ -161,22 +163,45 @@ class _EcgChartState extends State<EcgChart> {
         : latestEcgTime - chartWindowSizeMs;
     final double maxX = latestEcgTime;
 
-    return SfCartesianChart(
-      backgroundColor: Colors.black,
-      plotAreaBorderWidth: 0,
-      primaryXAxis: NumericAxis(minimum: minX, maximum: maxX, interval: 500),
-      primaryYAxis: NumericAxis(minimum: 0, maximum: 4096, interval: 512),
-      series: [
-        LineSeries<EcgDataPoint, double>(
-          dataSource: plottedEcgData,
-          xValueMapper: (dataPoint, _) => dataPoint.ecgTime,
-          yValueMapper: (dataPoint, _) => dataPoint.ecgValue,
-          animationDuration: 0,
-          onRendererCreated: (controller) {
-            _chartSeriesController = controller;
-          },
-          color: const Color.fromARGB(255, 228, 10, 10),
+    return Stack(
+      children: <Widget>[
+        SafeArea(
+          child: Container(
+            color: Colors.black,
+            padding: const EdgeInsets.only(top: 20),
+            child: SizedBox(
+              height: 800,
+              child: SfCartesianChart(
+                backgroundColor: Colors.black,
+                plotAreaBorderWidth: 0,
+                margin: EdgeInsets.all(15),
+                primaryXAxis: NumericAxis(
+                  minimum: minX,
+                  maximum: maxX,
+                  interval: 500,
+                ),
+                primaryYAxis: NumericAxis(
+                  minimum: 0,
+                  maximum: 4096,
+                  interval: 512,
+                ),
+                series: [
+                  LineSeries<EcgDataPoint, double>(
+                    dataSource: plottedEcgData,
+                    xValueMapper: (dataPoint, _) => dataPoint.ecgTime,
+                    yValueMapper: (dataPoint, _) => dataPoint.ecgValue,
+                    animationDuration: 0,
+                    onRendererCreated: (controller) {
+                      _chartSeriesController = controller;
+                    },
+                    color: const Color.fromARGB(255, 228, 10, 10),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
+        Positioned(top: -5, right: 40, child: BpmWidget()),
       ],
     );
   }
@@ -226,6 +251,7 @@ class _EcgChartState extends State<EcgChart> {
       'session_id': currentSessionId,
       'timestamp_ms': packet.timestamp,
       'ecg_data': packet.samples,
+      'bpm': packet.bpm,
     });
 
     if (_supabaseBuffer.length >= supabaseBatchSize) {
@@ -265,6 +291,10 @@ class _EcgChartState extends State<EcgChart> {
     } catch (e) {
       print("Error ending Supabase session: $e");
     }
+  }
+
+  void updateBPM(EcgPacket newPacket) {
+    bpm.value = newPacket.bpm;
   }
 }
 

@@ -14,7 +14,7 @@ class NavbarWidget extends StatelessWidget {
     return NavigationBar(
       destinations: [
         for (var page in navbarPages)
-          NavigationDestination(icon: Icon(page.icon), label: page.title),
+          NavigationDestination(icon: Icon(page.icon), label: page.label),
       ],
 
       selectedIndex: selectedIndex,

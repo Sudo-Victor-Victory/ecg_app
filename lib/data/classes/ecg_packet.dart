@@ -25,7 +25,7 @@ class EcgPacket {
 
     final timestamp = byteData.getUint32(20, Endian.little);
 
-    // Read bpm (bytes 24-25)
+    // Read bpm (bytes 24-27)
     final bpm = byteData.getUint16(24, Endian.little);
     print("BPM: $bpm");
     return EcgPacket(samples, timestamp, bpm);

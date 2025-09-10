@@ -79,8 +79,13 @@ class _SessionsState extends State<Sessions> {
   }
 
   Widget _buildSessionTile(Map<String, dynamic> result) {
-    final startTime = DateTime.parse(result["start_time"]).toLocal();
-    final endTime = DateTime.parse(result["end_time"]).toLocal();
+    final startRaw = result["start_time"];
+    final endRaw = result["end_time"];
+
+    final startTime = startRaw != null
+        ? DateTime.parse(startRaw).toLocal()
+        : null;
+    final endTime = endRaw != null ? DateTime.parse(endRaw).toLocal() : null;
 
     return InkWell(
       onTap: () => selectSession(result),

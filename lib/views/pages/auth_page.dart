@@ -113,7 +113,10 @@ class _AuthPageState extends State<AuthPage> {
     }
     // catches weak password
     on AuthWeakPasswordException catch (e) {
-      _showErrorDialog("Weak password", e.message);
+      _showErrorDialog(
+        "Weak password",
+        "Use at least 6 characters, 1 upercase, and at least 1 symbol ",
+      );
     }
     // catches other API errors (like email already used)
     on AuthApiException catch (e) {

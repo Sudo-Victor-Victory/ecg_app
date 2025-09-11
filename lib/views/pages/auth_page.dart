@@ -2,14 +2,14 @@ import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+class AuthPage extends StatefulWidget {
+  const AuthPage({super.key});
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  State<AuthPage> createState() => _AuthPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _AuthPageState extends State<AuthPage> {
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPassword = TextEditingController();
   bool passwordVisible = false;

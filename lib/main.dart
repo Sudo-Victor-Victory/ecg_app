@@ -1,7 +1,7 @@
 import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:flutter/material.dart';
-import 'package:ecg_app/views/pages/sign_up.dart';
+import 'package:ecg_app/views/pages/auth_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -48,7 +48,7 @@ class _MyAppState extends State<MyApp> {
               brightness: isDarkMode ? Brightness.dark : Brightness.light,
             ),
           ),
-          home: SignUpPage(),
+          home: AuthPage(),
         );
       },
     );

@@ -2,28 +2,28 @@ import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+class AuthPage extends StatefulWidget {
+  const AuthPage({super.key});
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  State<AuthPage> createState() => _AuthPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _AuthPageState extends State<AuthPage> {
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPassword = TextEditingController();
   bool passwordVisible = false;
 
+  bool isLogin = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Sign up", selectionColor: Color(0xFF1D1B14)),
+        title: Text("Sign up or Log in", selectionColor: Color(0xFF1D1B14)),
         backgroundColor: Color(0xFF07A0C3),
       ),
       body: Column(
         children: [
-          Text("Hi you are in the sign up page"),
           TextField(
             controller: controllerEmail,
             onEditingComplete: () => setState(() {}),
@@ -52,37 +52,25 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
             ),
           ),
-          Center(
-            child: FilledButton(
-              onPressed: () async {
-                print("attempting signup");
-                var idk = await signUp();
-                if (idk != null) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return WidgetTree();
-                      },
-                    ),
-                  );
-                }
-              },
-              // onPressed: () => Navigator.pushReplacement(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) {
-              //       return WidgetTree();
-              //     },
-              //   ),
-              // ),
-              child: Text("Sign up"),
-            ),
+          Text("Switch me to change to ${isLogin ? "Sign up" : "Log in"}"),
+          Switch.adaptive(
+            value: isLogin,
+            onChanged: (value) {
+              isLogin = !isLogin;
+              setState(() {});
+            },
           ),
           Center(
             child: FilledButton(
               onPressed: () async {
-                var idk = await signIn();
+                var idk;
+                if (isLogin) {
+                  print("attempting log in");
+                  idk = await signIn();
+                } else {
+                  print("attempting sign up");
+                  idk = await signUp();
+                }
                 if (idk != null) {
                   Navigator.pushReplacement(
                     context,
@@ -95,7 +83,11 @@ class _SignUpPageState extends State<SignUpPage> {
                 }
               },
 
-              child: Text("Go to login page"),
+              child: Text(
+                isLogin
+                    ? "Already have an account? Log in"
+                    : "Don't have an account? Sign up",
+              ),
             ),
           ),
         ],
@@ -104,24 +96,44 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<User?> signUp() async {
-    final supabase = Supabase.instance.client;
+    try {
+      final supabase = Supabase.instance.client;
 
-    final res = await supabase.auth.signUp(
-      email: controllerEmail.text,
-      password: controllerPassword.text,
-    );
+      final res = await supabase.auth.signUp(
+        email: controllerEmail.text,
+        password: controllerPassword.text,
+      );
 
-    if (res.user != null) {
-      print("Signed up");
-      print(res.toString());
+      if (res.user != null) {
+        print("Signed up");
+        print(res.toString());
+      }
+
+      return res.user;
+    }
+    // catches weak password
+    on AuthWeakPasswordException catch (e) {
+      _showErrorDialog(
+        "Weak password",
+        "Use at least 6 characters, 1 upercase, and at least 1 symbol ",
+      );
+    }
+    // catches other API errors (like email already used)
+    on AuthApiException catch (e) {
+      _showErrorDialog("Sign up failed", e.message);
+    }
+    // optional catch-all
+    catch (e) {
+      _showErrorDialog("Unexpected error", e.toString());
     }
 
-    return res.user;
+    return null;
   }
 
   Future<User?> signIn() async {
-    final supabase = Supabase.instance.client;
     try {
+      final supabase = Supabase.instance.client;
+
       final res = await supabase.auth.signInWithPassword(
         email: controllerEmail.text,
         password: controllerPassword.text,
@@ -158,5 +170,27 @@ class _SignUpPageState extends State<SignUpPage> {
       );
     }
     return null;
+  }
+
+  void _showErrorDialog(String title, String message) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Center(child: Text(title)),
+        content: SizedBox(
+          width: 200.0,
+          height: 100.0,
+          child: Center(child: Text(message)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 }

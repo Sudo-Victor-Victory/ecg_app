@@ -13,7 +13,9 @@ class _SessionsState extends State<Sessions> {
   final client = Supabase.instance.client;
   PostgrestList? supabaseSessions = [];
 
+  // Row of ecg_session in supabase
   Map<String, dynamic>? selectedSession;
+  // Rows of ecg_data from supabase, all from the same session_id
   List<Map<String, dynamic>>? ecgData;
 
   @override
@@ -32,18 +34,51 @@ class _SessionsState extends State<Sessions> {
     setState(() => supabaseSessions = receivedSessions);
   }
 
+  /// Assigns returned rows from Supabase to flutter variables & sets
   Future<void> selectSession(Map<String, dynamic> session) async {
-    final rows = await client
-        .from('ecg_data')
-        .select('*')
-        .eq('session_id', session['id']);
+    final allRows = await fetchAllEcgRowsFromSession(client, session['id']);
+    print("Fetched ${allRows.length} rows for session ${session['id']}");
+    print(allRows.length);
 
     setState(() {
       selectedSession = session;
-      ecgData = rows;
+      ecgData = allRows;
     });
   }
 
+  /// Retrieves all ecg_data rows from supabase based on session_id
+  Future<List<Map<String, dynamic>>> fetchAllEcgRowsFromSession(
+    SupabaseClient client,
+    String sessionId,
+  ) async {
+    const int pageSize = 1000;
+    int from = 0;
+    int to = pageSize - 1;
+    List<Map<String, dynamic>> allRows = [];
+
+    // Without range & chunking we could not pull the 1000s of ecg_rows from
+    // the postgres database.
+    while (true) {
+      final chunk = await client
+          .from('ecg_data')
+          .select('*')
+          .eq('session_id', sessionId)
+          .range(from, to);
+
+      if (chunk.isEmpty) break;
+
+      allRows.addAll(chunk);
+
+      if (chunk.length < pageSize) break; // no more rows
+
+      from += pageSize;
+      to += pageSize;
+    }
+
+    return allRows;
+  }
+
+  /// For idempotentency
   void clearSelection() {
     setState(() {
       selectedSession = null;
@@ -79,8 +114,13 @@ class _SessionsState extends State<Sessions> {
   }
 
   Widget _buildSessionTile(Map<String, dynamic> result) {
-    final startTime = DateTime.parse(result["start_time"]).toLocal();
-    final endTime = DateTime.parse(result["end_time"]).toLocal();
+    final startRaw = result["start_time"];
+    final endRaw = result["end_time"];
+
+    final startTime = startRaw != null
+        ? DateTime.parse(startRaw).toLocal()
+        : null;
+    final endTime = endRaw != null ? DateTime.parse(endRaw).toLocal() : null;
 
     return InkWell(
       onTap: () => selectSession(result),

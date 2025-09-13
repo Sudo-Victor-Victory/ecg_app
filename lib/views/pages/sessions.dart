@@ -1,6 +1,8 @@
 import 'package:ecg_app/views/widgets/historical_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
 class Sessions extends StatefulWidget {
   const Sessions({super.key});
@@ -18,6 +20,7 @@ class _SessionsState extends State<Sessions> {
   // Rows of ecg_data from supabase, all from the same session_id
   List<Map<String, dynamic>>? ecgData;
 
+  String? loadingSessionId;
   @override
   void initState() {
     super.initState();
@@ -92,9 +95,12 @@ class _SessionsState extends State<Sessions> {
       final startTime = DateTime.parse(
         selectedSession!["start_time"],
       ).toLocal();
+
+      final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime);
+
       return Scaffold(
         appBar: AppBar(
-          title: Text("Session ${startTime.toIso8601String()}"),
+          title: Text("Session $formattedTime"),
           leading: BackButton(onPressed: clearSelection),
         ),
         body: HistoricalChart(ecgRows: ecgData!, startTime: startTime),
@@ -105,7 +111,16 @@ class _SessionsState extends State<Sessions> {
     return Scaffold(
       appBar: AppBar(title: const Text("Sessions")),
       body: rows.isEmpty
-          ? const Center(child: Text("Sorry no data"))
+          ? Center(
+              child: SizedBox(
+                child: Lottie.asset(
+                  'assets/lotties/loading.json',
+                  fit: BoxFit.cover,
+                  height: 350.0,
+                  width: 400,
+                ),
+              ),
+            )
           : ListView.builder(
               itemCount: rows.length,
               itemBuilder: (_, index) => _buildSessionTile(rows[index]),
@@ -116,45 +131,93 @@ class _SessionsState extends State<Sessions> {
   Widget _buildSessionTile(Map<String, dynamic> result) {
     final startRaw = result["start_time"];
     final endRaw = result["end_time"];
-
-    final startTime = startRaw != null
+    // Parse DateTimes (actual DateTime objects) from ecg_session table
+    final startDateTime = startRaw != null
         ? DateTime.parse(startRaw).toLocal()
         : null;
-    final endTime = endRaw != null ? DateTime.parse(endRaw).toLocal() : null;
+    final endDateTime = endRaw != null
+        ? DateTime.parse(endRaw).toLocal()
+        : null;
 
-    return InkWell(
-      onTap: () => selectSession(result),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey)),
+    // Format them just for displaying to the user
+    final startTime = startDateTime != null
+        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(startDateTime)
+        : null;
+    final endTime = endDateTime != null
+        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(endDateTime)
+        : null;
+
+    final duration = endDateTime!.difference(startDateTime!);
+
+    final sessionId = result['id'] as String;
+
+    // Stack was chosen to overlay animations ontop of the row
+    return Stack(
+      children: [
+        InkWell(
+          onTap: () async {
+            setState(() => loadingSessionId = sessionId);
+            await selectSession(result);
+            setState(() => loadingSessionId = null);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.grey)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Start: $startTime",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} min",
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "End: $endTime",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.insert_chart),
+              ],
+            ),
+          ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Start: $startTime",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+
+        // overlay loading animation on this tile if it's the tapped one
+        if (loadingSessionId == sessionId) ...[
+          Positioned.fill(
+            child: Container(
+              color: Colors.white,
+              child: Center(
+                child: SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: Lottie.asset(
+                    'assets/lotties/clipboard.json',
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "End: $endTime",
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
+                ),
               ),
             ),
-            const Icon(Icons.insert_chart),
-          ],
-        ),
-      ),
+          ),
+        ],
+      ],
     );
   }
 }

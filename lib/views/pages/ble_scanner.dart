@@ -4,6 +4,7 @@ import 'package:ecg_app/views/widgets/ble_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:lottie/lottie.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class BleScanner extends StatefulWidget {
@@ -174,7 +175,17 @@ class _BleScannerState extends State<BleScanner> {
           content: SizedBox(
             width: 200.0,
             height: 100.0,
-            child: Column(children: [Text('Successfully connected to $name')]),
+            child: Column(
+              children: [
+                Lottie.asset(
+                  'assets/lotties/bluetooth.json',
+                  fit: BoxFit.cover,
+                  height: 100.0,
+                  width: 50.0,
+                ),
+                Text('Successfully connected to $name'),
+              ],
+            ),
           ),
           actions: [
             TextButton(

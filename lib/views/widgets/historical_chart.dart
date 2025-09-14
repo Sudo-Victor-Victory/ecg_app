@@ -35,6 +35,7 @@ class _HistoricalChartState extends State<HistoricalChart> {
   bool isProgrammaticSelection = false;
   double yAxisBound = 0;
 
+  // Time between samples from ESP32
   static const double sampleSpacing = 4.0;
   @override
   void initState() {

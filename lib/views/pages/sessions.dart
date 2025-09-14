@@ -15,7 +15,9 @@ class _SessionsState extends State<Sessions> {
   final client = Supabase.instance.client;
 
   List<Map<String, dynamic>> supabaseSessions = [];
+  // The ecg_session row we pull from supabase.
   Map<String, dynamic>? selectedSession;
+  // The ecg_data rows we pull from supabase.
   List<Map<String, dynamic>>? ecgData;
 
   bool isLoadingSessions = false;
@@ -43,7 +45,7 @@ class _SessionsState extends State<Sessions> {
     });
   }
 
-  /// Assigns returned rows from Supabase to flutter variables & sets
+  /// Assigns returned rows from Supabase to flutter variables
   Future<void> _loadSession(
     Map<String, dynamic> session, {
     bool chartBPM = false,
@@ -66,7 +68,7 @@ class _SessionsState extends State<Sessions> {
   Future<List<Map<String, dynamic>>> _fetchAllEcgRowsFromSession(
     String sessionId,
   ) async {
-    const pageSize = 1000;
+    const int pageSize = 1000;
     int from = 0;
     int to = pageSize - 1;
     final allRows = <Map<String, dynamic>>[];

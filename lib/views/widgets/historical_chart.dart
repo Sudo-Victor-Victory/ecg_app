@@ -32,55 +32,47 @@ class _HistoricalChartState extends State<HistoricalChart> {
   int? selectedPointIndex;
   // Used to determine if a tap/swap was programmatic or manual.
   // Tap provides pointIndex, swipe provides viewportPointIndex
-  bool manualTap = false;
+  bool isProgrammaticSelection = false;
   double yAxisBound = 0;
+
+  static const double sampleSpacing = 4.0;
   @override
   void initState() {
+    super.initState();
+    chartData = widget.isChartingBPM ? _buildBpmPoints() : _buildEcgPoints();
+    yAxisBound =
+        chartData.map((p) => p.ecgValue).reduce((a, b) => a > b ? a : b) + 2;
+
+    axisVisibleMin = chartData.first.ecgTime;
+    axisVisibleMax = axisVisibleMin + 10000; // 10 sec window
+
+    selectionBehavior = SelectionBehavior(enable: true);
+  }
+
+  List<EcgDataPoint> _buildEcgPoints() {
     //Initialize the data source to the chart
     final dataPoints = <EcgDataPoint>[];
     final startMs = widget.startTime.millisecondsSinceEpoch.toDouble();
-    print(widget.isChartingBPM);
-    final String? table_column;
-    if (widget.isChartingBPM == false) {
-      table_column = 'ecg_data';
-      for (var row in widget.ecgRows) {
-        final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
-        final samples = List<int>.from(row[table_column]);
-        for (int i = 0; i < samples.length; i++) {
-          dataPoints.add(
-            EcgDataPoint(
-              timestampMs + i * 4.0, // 4ms sample spacing. May want to env it.
-              samples[i].toDouble(),
-            ),
-          );
-        }
-      }
-      yAxisBound = 4096;
-    } else {
-      table_column = 'bpm';
-      for (var row in widget.ecgRows) {
-        final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
-        final sample = (row[table_column]).toDouble();
+    for (var row in widget.ecgRows) {
+      final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
+      final samples = List<int>.from(row['ecg_data']);
+      for (int i = 0; i < samples.length; i++) {
         dataPoints.add(
-          EcgDataPoint(
-            timestampMs + 4.0, // 4ms sample spacing. May want to env it.
-            sample,
-          ),
+          EcgDataPoint(timestampMs + i * sampleSpacing, samples[i].toDouble()),
         );
       }
     }
-    yAxisBound =
-        dataPoints.map((p) => p.ecgValue).reduce((a, b) => a > b ? a : b) + 2;
 
-    // Decided to assign instead of using late to possibly optimize
-    // for querying in chunks.
-    chartData = dataPoints;
-    // Screen will maintain a 10 second window
-    axisVisibleMin = dataPoints.first.ecgTime;
-    axisVisibleMax = dataPoints.first.ecgTime + 10000;
-    // Enabling selection behavior
-    selectionBehavior = SelectionBehavior(enable: true);
-    super.initState();
+    yAxisBound = 4096;
+    return dataPoints;
+  }
+
+  List<EcgDataPoint> _buildBpmPoints() {
+    final startMs = widget.startTime.millisecondsSinceEpoch.toDouble();
+    return widget.ecgRows.map((row) {
+      final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
+      return EcgDataPoint(timestampMs, (row['bpm']).toDouble());
+    }).toList();
   }
 
   @override
@@ -149,19 +141,17 @@ class _HistoricalChartState extends State<HistoricalChart> {
   /// When the user taps or swipes they select a point internally.
   /// Updates axisVisibleMin + Max to adjust bounds of x-axis viewport.
   void updateSelectedPoint(SelectionArgs args) {
-    // While manually selecting the points.
-    if (!manualTap) {
-      selectedPointIndex = args.viewportPointIndex;
-    }
-    // While swiping the point gets selected.
-    else {
-      selectedPointIndex = args.pointIndex;
-    }
+    selectedPointIndex = isProgrammaticSelection
+        ? args.pointIndex
+        : args.viewportPointIndex;
 
-    // Sets visible minimum and visible maximum to maintain
-    // the selected point in the center of viewport
-    axisVisibleMin = selectedPointIndex! - 2.toDouble();
-    axisVisibleMax = selectedPointIndex! + 2.toDouble();
+    if (selectedPointIndex != null) {
+      final time = chartData[selectedPointIndex!].ecgTime;
+      // Sets visible minimum and visible maximum to maintain
+      // the selected point in the center of viewport
+      axisVisibleMin = time - 2;
+      axisVisibleMax = time + 2;
+    }
   }
 
   /// Updates the axisController based on the axisVisibleMin / Max
@@ -170,7 +160,7 @@ class _HistoricalChartState extends State<HistoricalChart> {
     // Executes when swiping the chart from right to left
     if (direction == ChartSwipeDirection.end &&
         (axisVisibleMax + 20.toDouble()) < chartData.length) {
-      manualTap = true;
+      isProgrammaticSelection = true;
       // Set the visible minimum and visible maximum to maintain
       // The selected point in the center of the viewport.
       axisVisibleMin = axisVisibleMin + 20.toDouble();

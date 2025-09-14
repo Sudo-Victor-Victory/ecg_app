@@ -13,52 +13,63 @@ class Sessions extends StatefulWidget {
 
 class _SessionsState extends State<Sessions> {
   final client = Supabase.instance.client;
-  PostgrestList? supabaseSessions = [];
 
-  // Row of ecg_session in supabase
+  List<Map<String, dynamic>> supabaseSessions = [];
   Map<String, dynamic>? selectedSession;
-  // Rows of ecg_data from supabase, all from the same session_id
   List<Map<String, dynamic>>? ecgData;
+
+  bool isLoadingSessions = false;
   bool isChartingBPM = false;
   String? loadingSessionId;
+
   @override
   void initState() {
     super.initState();
-    getSessionsFromSupabase();
+    _getSessionsFromSupabase();
   }
 
   /// Returns all sessions from Supabase that the user owns.
-  void getSessionsFromSupabase() async {
-    final receivedSessions = await client
+  Future<void> _getSessionsFromSupabase() async {
+    setState(() => isLoadingSessions = true);
+
+    final sessions = await client
         .from('ecg_session')
-        .select("*")
+        .select('*')
         .order('start_time', ascending: false);
 
-    setState(() => supabaseSessions = receivedSessions);
+    setState(() {
+      supabaseSessions = List<Map<String, dynamic>>.from(sessions);
+      isLoadingSessions = false;
+    });
   }
 
   /// Assigns returned rows from Supabase to flutter variables & sets
-  Future<void> selectSession(Map<String, dynamic> session) async {
-    final allRows = await fetchAllEcgRowsFromSession(client, session['id']);
-    print("Fetched ${allRows.length} rows for session ${session['id']}");
-    print(allRows.length);
+  Future<void> _loadSession(
+    Map<String, dynamic> session, {
+    bool chartBPM = false,
+  }) async {
+    setState(() {
+      loadingSessionId = session['id'];
+      isChartingBPM = chartBPM;
+    });
+
+    final rows = await _fetchAllEcgRowsFromSession(session['id']);
 
     setState(() {
       selectedSession = session;
-      ecgData = allRows;
+      ecgData = rows;
+      loadingSessionId = null;
     });
   }
 
   /// Retrieves all ecg_data rows from supabase based on session_id
-  Future<List<Map<String, dynamic>>> fetchAllEcgRowsFromSession(
-    SupabaseClient client,
+  Future<List<Map<String, dynamic>>> _fetchAllEcgRowsFromSession(
     String sessionId,
   ) async {
-    const int pageSize = 1000;
+    const pageSize = 1000;
     int from = 0;
     int to = pageSize - 1;
-    List<Map<String, dynamic>> allRows = [];
-
+    final allRows = <Map<String, dynamic>>[];
     // Without range & chunking we could not pull the 1000s of ecg_rows from
     // the postgres database.
     while (true) {
@@ -70,8 +81,7 @@ class _SessionsState extends State<Sessions> {
 
       if (chunk.isEmpty) break;
 
-      allRows.addAll(chunk);
-
+      allRows.addAll(List<Map<String, dynamic>>.from(chunk));
       if (chunk.length < pageSize) break; // no more rows
 
       from += pageSize;
@@ -81,8 +91,7 @@ class _SessionsState extends State<Sessions> {
     return allRows;
   }
 
-  /// For idempotentency
-  void clearSelection() {
+  void _clearSelection() {
     setState(() {
       selectedSession = null;
       ecgData = null;
@@ -91,17 +100,17 @@ class _SessionsState extends State<Sessions> {
 
   @override
   Widget build(BuildContext context) {
+    // If a session is selected, show its chart
     if (selectedSession != null && ecgData != null) {
       final startTime = DateTime.parse(
-        selectedSession!["start_time"],
+        selectedSession!['start_time'],
       ).toLocal();
-
       final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime);
 
       return Scaffold(
         appBar: AppBar(
-          title: Text("Session $formattedTime"),
-          leading: BackButton(onPressed: clearSelection),
+          title: Text('Session $formattedTime'),
+          leading: BackButton(onPressed: _clearSelection),
         ),
         body: HistoricalChart(
           ecgRows: ecgData!,
@@ -111,66 +120,35 @@ class _SessionsState extends State<Sessions> {
       );
     }
 
-    final rows = supabaseSessions?.toList() ?? [];
+    // Otherwise show the list of sessions
     return Scaffold(
-      appBar: AppBar(title: const Text("Sessions")),
-      body: rows.isEmpty
+      appBar: AppBar(title: const Text('Sessions')),
+      body: isLoadingSessions
           ? Center(
-              child: SizedBox(
-                child: Lottie.asset(
-                  'assets/lotties/loading.json',
-                  fit: BoxFit.cover,
-                  height: 350.0,
-                  width: 400,
-                ),
-              ),
+              child: Lottie.asset('assets/lotties/loading.json', height: 250),
             )
           : ListView.builder(
-              itemCount: rows.length,
-              itemBuilder: (_, index) => _buildSessionTile(rows[index]),
+              itemCount: supabaseSessions.length,
+              itemBuilder: (_, i) => _buildSessionTile(supabaseSessions[i]),
             ),
     );
   }
 
-  Widget _buildSessionTile(Map<String, dynamic> result) {
-    final startRaw = result["start_time"];
-    final endRaw = result["end_time"];
+  Widget _buildSessionTile(Map<String, dynamic> session) {
     // Parse DateTimes (actual DateTime objects) from ecg_session table
-    final startDateTime = startRaw != null
-        ? DateTime.parse(startRaw).toLocal()
-        : null;
-    final endDateTime = endRaw != null
-        ? DateTime.parse(endRaw).toLocal()
-        : null;
+    final startDate = DateTime.parse(session['start_time']).toLocal();
+    final endDate = DateTime.parse(session['end_time']).toLocal();
+    final duration = endDate.difference(startDate);
 
     // Format them just for displaying to the user
-    final startTime = startDateTime != null
-        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(startDateTime)
-        : null;
-    final endTime = endDateTime != null
-        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(endDateTime)
-        : null;
-
-    final duration = endDateTime!.difference(startDateTime!);
-
-    final sessionId = result['id'] as String;
-
+    final startText = DateFormat('yyyy-MM-dd HH:mm:ss').format(startDate);
+    final endText = DateFormat('yyyy-MM-dd HH:mm:ss').format(endDate);
+    final sessionId = session['id'];
     // Stack was chosen to overlay animations ontop of the row
     return Stack(
       children: [
         InkWell(
-          onTap: () async {
-            setState(() {
-              loadingSessionId = result['id'];
-              isChartingBPM = false; // <-- add this
-            });
-
-            await selectSession(result);
-
-            setState(() {
-              loadingSessionId = null;
-            });
-          },
+          onTap: () => _loadSession(session),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
             decoration: const BoxDecoration(
@@ -184,18 +162,18 @@ class _SessionsState extends State<Sessions> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Start: $startTime",
+                        'Start: $startText',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} min",
+                        'Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} min',
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "End: $endTime",
+                        'End: $endText',
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
@@ -206,28 +184,12 @@ class _SessionsState extends State<Sessions> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.show_chart), // ECG icon
-                  onPressed: () async {
-                    setState(() => loadingSessionId = sessionId);
-                    await selectSession(result);
-
-                    setState(() {
-                      loadingSessionId = null;
-                    });
-                  },
+                  onPressed: () => _loadSession(session, chartBPM: false),
                 ),
                 IconButton(
                   icon: const Icon(Icons.favorite), // BPM icon
-                  onPressed: () async {
-                    setState(() {
-                      loadingSessionId = sessionId;
-                      isChartingBPM = true; // <-- true if this is your BPM view
-                    });
-
-                    await selectSession(result);
-
-                    setState(() {
-                      loadingSessionId = null;
-                    });
+                  onPressed: () {
+                    _loadSession(session, chartBPM: true);
                   },
                 ),
               ],

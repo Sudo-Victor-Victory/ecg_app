@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:ecg_app/views/pages/ecg_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -5,11 +7,13 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 class HistoricalChart extends StatefulWidget {
   final List<Map<String, dynamic>> ecgRows;
   final DateTime startTime;
+  final bool isChartingBPM;
 
   const HistoricalChart({
     super.key,
     required this.ecgRows,
     required this.startTime,
+    required this.isChartingBPM,
   });
 
   @override
@@ -28,10 +32,25 @@ class _HistoricalChartState extends State<HistoricalChart> {
   int? selectedPointIndex;
   // Used to determine if a tap/swap was programmatic or manual.
   // Tap provides pointIndex, swipe provides viewportPointIndex
-  bool manualTap = false;
+  bool isProgrammaticSelection = false;
+  double yAxisBound = 0;
 
+  // Time between samples from ESP32
+  static const double sampleSpacing = 4.0;
   @override
   void initState() {
+    super.initState();
+    chartData = widget.isChartingBPM ? _buildBpmPoints() : _buildEcgPoints();
+    yAxisBound =
+        chartData.map((p) => p.ecgValue).reduce((a, b) => a > b ? a : b) + 2;
+
+    axisVisibleMin = chartData.first.ecgTime;
+    axisVisibleMax = axisVisibleMin + 10000; // 10 sec window
+
+    selectionBehavior = SelectionBehavior(enable: true);
+  }
+
+  List<EcgDataPoint> _buildEcgPoints() {
     //Initialize the data source to the chart
     final dataPoints = <EcgDataPoint>[];
     final startMs = widget.startTime.millisecondsSinceEpoch.toDouble();
@@ -40,22 +59,21 @@ class _HistoricalChartState extends State<HistoricalChart> {
       final samples = List<int>.from(row['ecg_data']);
       for (int i = 0; i < samples.length; i++) {
         dataPoints.add(
-          EcgDataPoint(
-            timestampMs + i * 4.0, // 4ms sample spacing. May want to env it.
-            samples[i].toDouble(),
-          ),
+          EcgDataPoint(timestampMs + i * sampleSpacing, samples[i].toDouble()),
         );
       }
     }
-    // Decided to assign instead of using late to possibly optimize
-    // for querying in chunks.
-    chartData = dataPoints;
-    // Screen will maintain a 10 second window
-    axisVisibleMin = dataPoints.first.ecgTime;
-    axisVisibleMax = dataPoints.first.ecgTime + 10000;
-    // Enabling selection behavior
-    selectionBehavior = SelectionBehavior(enable: true);
-    super.initState();
+
+    yAxisBound = 4096;
+    return dataPoints;
+  }
+
+  List<EcgDataPoint> _buildBpmPoints() {
+    final startMs = widget.startTime.millisecondsSinceEpoch.toDouble();
+    return widget.ecgRows.map((row) {
+      final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
+      return EcgDataPoint(timestampMs, (row['bpm']).toDouble());
+    }).toList();
   }
 
   @override
@@ -87,9 +105,9 @@ class _HistoricalChartState extends State<HistoricalChart> {
           ),
           primaryYAxis: NumericAxis(
             minimum: 0,
-            maximum: 4096,
+            maximum: yAxisBound,
             labelStyle: const TextStyle(color: Colors.white),
-            title: AxisTitle(text: "ECG data"),
+            title: AxisTitle(text: widget.isChartingBPM ? "BPM" : "ECG Data"),
           ),
           tooltipBehavior: TooltipBehavior(enable: true),
           zoomPanBehavior: ZoomPanBehavior(
@@ -106,7 +124,7 @@ class _HistoricalChartState extends State<HistoricalChart> {
               yValueMapper: (p, _) => p.ecgValue,
               color: const Color.fromARGB(255, 228, 10, 10),
               animationDuration: 0,
-              name: "Ecg value",
+              name: widget.isChartingBPM ? "BPM Value" : "ECG Value",
             ),
           ],
           // Important. Sliding starts with selecting a point
@@ -124,19 +142,17 @@ class _HistoricalChartState extends State<HistoricalChart> {
   /// When the user taps or swipes they select a point internally.
   /// Updates axisVisibleMin + Max to adjust bounds of x-axis viewport.
   void updateSelectedPoint(SelectionArgs args) {
-    // While manually selecting the points.
-    if (!manualTap) {
-      selectedPointIndex = args.viewportPointIndex;
-    }
-    // While swiping the point gets selected.
-    else {
-      selectedPointIndex = args.pointIndex;
-    }
+    selectedPointIndex = isProgrammaticSelection
+        ? args.pointIndex
+        : args.viewportPointIndex;
 
-    // Sets visible minimum and visible maximum to maintain
-    // the selected point in the center of viewport
-    axisVisibleMin = selectedPointIndex! - 2.toDouble();
-    axisVisibleMax = selectedPointIndex! + 2.toDouble();
+    if (selectedPointIndex != null) {
+      final time = chartData[selectedPointIndex!].ecgTime;
+      // Sets visible minimum and visible maximum to maintain
+      // the selected point in the center of viewport
+      axisVisibleMin = time - 2;
+      axisVisibleMax = time + 2;
+    }
   }
 
   /// Updates the axisController based on the axisVisibleMin / Max
@@ -145,7 +161,7 @@ class _HistoricalChartState extends State<HistoricalChart> {
     // Executes when swiping the chart from right to left
     if (direction == ChartSwipeDirection.end &&
         (axisVisibleMax + 20.toDouble()) < chartData.length) {
-      manualTap = true;
+      isProgrammaticSelection = true;
       // Set the visible minimum and visible maximum to maintain
       // The selected point in the center of the viewport.
       axisVisibleMin = axisVisibleMin + 20.toDouble();

@@ -19,7 +19,7 @@ class _SessionsState extends State<Sessions> {
   Map<String, dynamic>? selectedSession;
   // Rows of ecg_data from supabase, all from the same session_id
   List<Map<String, dynamic>>? ecgData;
-
+  bool isChartingBPM = false;
   String? loadingSessionId;
   @override
   void initState() {
@@ -103,7 +103,11 @@ class _SessionsState extends State<Sessions> {
           title: Text("Session $formattedTime"),
           leading: BackButton(onPressed: clearSelection),
         ),
-        body: HistoricalChart(ecgRows: ecgData!, startTime: startTime),
+        body: HistoricalChart(
+          ecgRows: ecgData!,
+          startTime: startTime,
+          isChartingBPM: isChartingBPM,
+        ),
       );
     }
 
@@ -156,9 +160,16 @@ class _SessionsState extends State<Sessions> {
       children: [
         InkWell(
           onTap: () async {
-            setState(() => loadingSessionId = sessionId);
+            setState(() {
+              loadingSessionId = result['id'];
+              isChartingBPM = false; // <-- add this
+            });
+
             await selectSession(result);
-            setState(() => loadingSessionId = null);
+
+            setState(() {
+              loadingSessionId = null;
+            });
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
@@ -193,7 +204,32 @@ class _SessionsState extends State<Sessions> {
                     ],
                   ),
                 ),
-                const Icon(Icons.insert_chart),
+                IconButton(
+                  icon: const Icon(Icons.show_chart), // ECG icon
+                  onPressed: () async {
+                    setState(() => loadingSessionId = sessionId);
+                    await selectSession(result);
+
+                    setState(() {
+                      loadingSessionId = null;
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.favorite), // BPM icon
+                  onPressed: () async {
+                    setState(() {
+                      loadingSessionId = sessionId;
+                      isChartingBPM = true; // <-- true if this is your BPM view
+                    });
+
+                    await selectSession(result);
+
+                    setState(() {
+                      loadingSessionId = null;
+                    });
+                  },
+                ),
               ],
             ),
           ),

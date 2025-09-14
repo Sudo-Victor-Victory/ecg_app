@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:ecg_app/views/pages/ecg_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -5,11 +7,13 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 class HistoricalChart extends StatefulWidget {
   final List<Map<String, dynamic>> ecgRows;
   final DateTime startTime;
+  final bool isChartingBPM;
 
   const HistoricalChart({
     super.key,
     required this.ecgRows,
     required this.startTime,
+    required this.isChartingBPM,
   });
 
   @override
@@ -29,24 +33,45 @@ class _HistoricalChartState extends State<HistoricalChart> {
   // Used to determine if a tap/swap was programmatic or manual.
   // Tap provides pointIndex, swipe provides viewportPointIndex
   bool manualTap = false;
-
+  double yAxisBound = 0;
   @override
   void initState() {
     //Initialize the data source to the chart
     final dataPoints = <EcgDataPoint>[];
     final startMs = widget.startTime.millisecondsSinceEpoch.toDouble();
-    for (var row in widget.ecgRows) {
-      final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
-      final samples = List<int>.from(row['ecg_data']);
-      for (int i = 0; i < samples.length; i++) {
+    print(widget.isChartingBPM);
+    final String? table_column;
+    if (widget.isChartingBPM == false) {
+      table_column = 'ecg_data';
+      for (var row in widget.ecgRows) {
+        final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
+        final samples = List<int>.from(row[table_column]);
+        for (int i = 0; i < samples.length; i++) {
+          dataPoints.add(
+            EcgDataPoint(
+              timestampMs + i * 4.0, // 4ms sample spacing. May want to env it.
+              samples[i].toDouble(),
+            ),
+          );
+        }
+      }
+      yAxisBound = 4096;
+    } else {
+      table_column = 'bpm';
+      for (var row in widget.ecgRows) {
+        final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
+        final sample = (row[table_column]).toDouble();
         dataPoints.add(
           EcgDataPoint(
-            timestampMs + i * 4.0, // 4ms sample spacing. May want to env it.
-            samples[i].toDouble(),
+            timestampMs + 4.0, // 4ms sample spacing. May want to env it.
+            sample,
           ),
         );
       }
     }
+    yAxisBound =
+        dataPoints.map((p) => p.ecgValue).reduce((a, b) => a > b ? a : b) + 2;
+
     // Decided to assign instead of using late to possibly optimize
     // for querying in chunks.
     chartData = dataPoints;
@@ -87,9 +112,9 @@ class _HistoricalChartState extends State<HistoricalChart> {
           ),
           primaryYAxis: NumericAxis(
             minimum: 0,
-            maximum: 4096,
+            maximum: yAxisBound,
             labelStyle: const TextStyle(color: Colors.white),
-            title: AxisTitle(text: "ECG data"),
+            title: AxisTitle(text: widget.isChartingBPM ? "BPM" : "ECG Data"),
           ),
           tooltipBehavior: TooltipBehavior(enable: true),
           zoomPanBehavior: ZoomPanBehavior(
@@ -106,7 +131,7 @@ class _HistoricalChartState extends State<HistoricalChart> {
               yValueMapper: (p, _) => p.ecgValue,
               color: const Color.fromARGB(255, 228, 10, 10),
               animationDuration: 0,
-              name: "Ecg value",
+              name: widget.isChartingBPM ? "BPM Value" : "ECG Value",
             ),
           ],
           // Important. Sliding starts with selecting a point

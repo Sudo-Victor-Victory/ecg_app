@@ -27,7 +27,18 @@ class _AuthPageState extends State<AuthPage> {
         child: FractionallySizedBox(
           child: Column(
             children: [
-              Center(child: Text("Welcome to Real Time ECG (RTECG)")),
+              Center(
+                child: Text(
+                  "Welcome to\nReal Time ECG (RTECG)",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.teal,
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 30.0,
+                  ),
+                ),
+              ),
               SizedBox(
                 child: Lottie.asset(
                   'assets/lotties/heart_and_ecg.json',

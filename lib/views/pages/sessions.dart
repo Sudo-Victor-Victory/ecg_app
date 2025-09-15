@@ -23,7 +23,7 @@ class _SessionsState extends State<Sessions> {
   bool isLoadingSessions = false;
   bool isChartingBPM = false;
   String? loadingSessionId;
-
+  String appBarMessage = "Sessions ";
   @override
   void initState() {
     super.initState();
@@ -32,17 +32,23 @@ class _SessionsState extends State<Sessions> {
 
   /// Returns all sessions from Supabase that the user owns.
   Future<void> _getSessionsFromSupabase() async {
-    setState(() => isLoadingSessions = true);
+    try {
+      setState(() => isLoadingSessions = true);
 
-    final sessions = await client
-        .from('ecg_session')
-        .select('*')
-        .order('start_time', ascending: false);
+      final sessions = await client
+          .from('ecg_session')
+          .select('*')
+          .order('start_time', ascending: false);
 
-    setState(() {
-      supabaseSessions = List<Map<String, dynamic>>.from(sessions);
-      isLoadingSessions = false;
-    });
+      setState(() {
+        appBarMessage = "Total number of Sessions: ${sessions.length}";
+        supabaseSessions = sessions;
+        isLoadingSessions = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      // optionally show an error
+    }
   }
 
   /// Assigns returned rows from Supabase to flutter variables
@@ -108,10 +114,22 @@ class _SessionsState extends State<Sessions> {
         selectedSession!['start_time'],
       ).toLocal();
       final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime);
-
       return Scaffold(
         appBar: AppBar(
-          title: Text('Session $formattedTime'),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Session $formattedTime'),
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: isChartingBPM
+                    ? Lottie.asset('assets/lotties/heart_beat.json')
+                    : Lottie.asset('assets/lotties/ecg.json'),
+              ),
+            ],
+          ),
+          centerTitle: true,
           leading: BackButton(onPressed: _clearSelection),
         ),
         body: HistoricalChart(
@@ -124,8 +142,25 @@ class _SessionsState extends State<Sessions> {
 
     // Otherwise show the list of sessions
     return Scaffold(
-      appBar: AppBar(title: const Text('Sessions')),
-      body: isLoadingSessions
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Sessions'),
+            const SizedBox(width: 8),
+            // Animate the session count
+            TweenAnimationBuilder<int>(
+              tween: IntTween(begin: 0, end: supabaseSessions.length),
+              duration: const Duration(milliseconds: 800),
+              builder: (context, value, _) {
+                return Text('($value)', style: const TextStyle(fontSize: 16));
+              },
+            ),
+          ],
+        ),
+        centerTitle: true,
+      ),
+      body: supabaseSessions.isEmpty
           ? Center(
               child: Lottie.asset('assets/lotties/loading.json', height: 250),
             )
@@ -146,6 +181,12 @@ class _SessionsState extends State<Sessions> {
     final startText = DateFormat('yyyy-MM-dd HH:mm:ss').format(startDate);
     final endText = DateFormat('yyyy-MM-dd HH:mm:ss').format(endDate);
     final sessionId = session['id'];
+
+    // Tells the user if the duration of a session was minutes or seconds
+    String unitOfTime = endDate.difference(startDate).inMinutes < 1
+        ? "seconds"
+        : "minutes";
+
     // Stack was chosen to overlay animations ontop of the row
     return Stack(
       children: [
@@ -159,6 +200,12 @@ class _SessionsState extends State<Sessions> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Image(
+                  image: AssetImage('assets/lotties/temp_img.jpg'),
+                  width: 50,
+                ),
+                Padding(padding: EdgeInsetsGeometry.all(10)),
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,7 +218,7 @@ class _SessionsState extends State<Sessions> {
                         ),
                       ),
                       Text(
-                        'Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} min',
+                        "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} ${unitOfTime}",
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -185,11 +232,17 @@ class _SessionsState extends State<Sessions> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.show_chart), // ECG icon
+                  icon: const Icon(
+                    Icons.show_chart,
+                    color: Colors.lightBlue,
+                  ), // ECG icon
                   onPressed: () => _loadSession(session, chartBPM: false),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.favorite), // BPM icon
+                  icon: const Icon(
+                    Icons.favorite,
+                    color: Colors.red,
+                  ), // BPM icon
                   onPressed: () {
                     _loadSession(session, chartBPM: true);
                   },

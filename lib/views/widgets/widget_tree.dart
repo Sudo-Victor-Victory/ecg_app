@@ -45,7 +45,7 @@ final List<PageConfig> navbarPages = [
   ),
   PageConfig(
     title: "Profile page",
-    color: Colors.green,
+    color: Color(0XFFFF0000),
     page: const Center(child: Text("Profile page")),
     icon: Icons.person,
     label: "Profile",
@@ -74,7 +74,14 @@ class WidgetTree extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(config.title),
+            title: Text(
+              config.title,
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 30.0,
+              ),
+            ),
             backgroundColor: config.color,
             centerTitle: true,
             actions: [

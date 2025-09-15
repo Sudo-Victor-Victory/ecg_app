@@ -166,12 +166,15 @@ class _SessionsState extends State<Sessions> {
             )
           : ListView.builder(
               itemCount: supabaseSessions.length,
-              itemBuilder: (_, i) => _buildSessionTile(supabaseSessions[i]),
+              itemBuilder: (_, i) => _buildSessionTile(
+                supabaseSessions[i],
+                supabaseSessions.length - i,
+              ),
             ),
     );
   }
 
-  Widget _buildSessionTile(Map<String, dynamic> session) {
+  Widget _buildSessionTile(Map<String, dynamic> session, int index) {
     // Parse DateTimes (actual DateTime objects) from ecg_session table
     final startDate = DateTime.parse(session['start_time']).toLocal();
     final endDate = DateTime.parse(session['end_time']).toLocal();
@@ -211,23 +214,25 @@ class _SessionsState extends State<Sessions> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Start: $startText',
+                        "Session $index",
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} ${unitOfTime}",
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'End: $endText',
+                        "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} $unitOfTime",
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
                         ),
                       ),
+                      Text(
+                        'Start: $startText, End : $endText',
+                        style: const TextStyle(),
+                      ),
+
+                      const SizedBox(height: 4),
                     ],
                   ),
                 ),

@@ -129,7 +129,7 @@ class _SessionsTileState extends State<SessionsTile> {
     final endDate = DateTime.parse(session['end_time']).toLocal();
     final duration = endDate.difference(startDate);
     final startText = DateFormat('yyyy-MM-dd HH:mm').format(startDate);
-    final endText = DateFormat('HH:mm').format(endDate);
+    final endText = DateFormat('yyyy-MM-dd HH:mm').format(endDate);
     final sessionId = session['id'];
     final unitOfTime = duration.inMinutes < 1 ? "seconds" : "minutes";
 

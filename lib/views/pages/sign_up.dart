@@ -28,7 +28,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Sign up or Log in", selectionColor: Color(0xFF1D1B14)),
+        title: Text("Sign up", selectionColor: Color(0xFF1D1B14)),
         backgroundColor: Color(0xFF07A0C3),
       ),
       body: SingleChildScrollView(
@@ -49,7 +49,7 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               SizedBox(
                 child: Lottie.asset(
-                  'assets/lotties/heart_and_ecg.json',
+                  'assets/lotties/ecg.json',
                   fit: BoxFit.cover,
                   height: 350.0,
                   width: 400,
@@ -115,12 +115,11 @@ class _SignUpPageState extends State<SignUpPage> {
               Center(
                 child: FilledButton(
                   onPressed: () async {
-                    var idk;
-
+                    User? newUser;
                     print("attempting sign up");
-                    idk = await signUp();
+                    newUser = await signUp();
 
-                    if (idk != null) {
+                    if (newUser != null) {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(

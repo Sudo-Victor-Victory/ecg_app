@@ -1,3 +1,4 @@
+import 'package:ecg_app/utils/dialog_alert.dart';
 import 'package:ecg_app/views/pages/sign_up.dart';
 import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
@@ -149,48 +150,12 @@ class _LogInPageState extends State<LogInPage> {
       if (!mounted) {
         return null;
       }
-      showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Failure in logging in'),
-          content: SizedBox(
-            width: 200.0,
-            height: 100.0,
-            child: Column(
-              children: [Text('Could not sign in with credentials')],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
+      showErrorDialog(
+        context,
+        "Failure in logging in",
+        "Could not sign in with credentials",
       );
     }
     return null;
-  }
-
-  void _showErrorDialog(String title, String message) {
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Center(child: Text(title)),
-        content: SizedBox(
-          width: 200.0,
-          height: 100.0,
-          child: Center(child: Text(message)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 }

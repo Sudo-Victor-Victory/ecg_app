@@ -142,6 +142,15 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Future<User?> signUp() async {
     try {
+      if (dropdownValue == null) {
+        await showErrorDialog(
+          context,
+          "Error in sign up",
+          "Please select a reason for using the app",
+        );
+
+        return null;
+      }
       final supabase = Supabase.instance.client;
 
       final res = await supabase.auth.signUp(
@@ -166,7 +175,13 @@ class _SignUpPageState extends State<SignUpPage> {
     }
     // catches other API errors (like email already used)
     on AuthApiException catch (e) {
-      await showErrorDialog(context, "Sign up failed", e.message);
+      await showErrorDialog(
+        context,
+        "Sign up failed",
+        e.message.contains("Unable to validate email")
+            ? "Please insert a valid email with an @"
+            : e.message,
+      );
     }
     // optional catch-all
     catch (e) {

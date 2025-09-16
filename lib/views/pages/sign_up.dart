@@ -1,21 +1,29 @@
+import 'package:ecg_app/utils/dialog_alert.dart';
 import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AuthPage extends StatefulWidget {
-  const AuthPage({super.key});
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  State<AuthPage> createState() => _AuthPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _AuthPageState extends State<AuthPage> {
+class _SignUpPageState extends State<SignUpPage> {
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPassword = TextEditingController();
   bool passwordVisible = false;
+  static const List<String> list = <String>[
+    'For fun',
+    'I like ECGs',
+    'Idk',
+    'Why are you still reading this',
+  ];
+  String? dropdownValue;
 
-  bool isLogin = true;
+  String? signUpReason;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,7 +37,7 @@ class _AuthPageState extends State<AuthPage> {
             children: [
               Center(
                 child: Text(
-                  "Welcome to\nReal Time ECG (RTECG)",
+                  "Sign up for\nReal Time ECG (RTECG)",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.teal,
@@ -84,25 +92,34 @@ class _AuthPageState extends State<AuthPage> {
                   ),
                 ),
               ),
-              Text("Switch me to change to ${isLogin ? "Sign up" : "Log in"}"),
-              Switch.adaptive(
-                value: isLogin,
-                onChanged: (value) {
-                  isLogin = !isLogin;
-                  setState(() {});
+              Center(child: Text("Reason for joining?")),
+              DropdownButton<String>(
+                value: dropdownValue,
+                hint: const Text("Select a reason"),
+                icon: const Icon(Icons.arrow_downward),
+                elevation: 16,
+                style: const TextStyle(color: Colors.deepPurple),
+                underline: Container(height: 2, color: Colors.deepPurpleAccent),
+                onChanged: (String? value) {
+                  setState(() {
+                    dropdownValue = value!;
+                  });
                 },
+                items: list.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
               ),
               Center(
                 child: FilledButton(
                   onPressed: () async {
                     var idk;
-                    if (isLogin) {
-                      print("attempting log in");
-                      idk = await signIn();
-                    } else {
-                      print("attempting sign up");
-                      idk = await signUp();
-                    }
+
+                    print("attempting sign up");
+                    idk = await signUp();
+
                     if (idk != null) {
                       Navigator.pushReplacement(
                         context,
@@ -114,12 +131,7 @@ class _AuthPageState extends State<AuthPage> {
                       );
                     }
                   },
-
-                  child: Text(
-                    isLogin
-                        ? "Already have an account? Log in"
-                        : "Don't have an account? Sign up",
-                  ),
+                  child: Text("You know you wanna sign up"),
                 ),
               ),
             ],
@@ -147,84 +159,25 @@ class _AuthPageState extends State<AuthPage> {
     }
     // catches weak password
     on AuthWeakPasswordException catch (e) {
-      _showErrorDialog(
+      await showErrorDialog(
+        context,
         "Weak password",
         "Use at least 6 characters, 1 upercase, and at least 1 symbol ",
       );
     }
     // catches other API errors (like email already used)
     on AuthApiException catch (e) {
-      _showErrorDialog("Sign up failed", e.message);
+      await showErrorDialog(context, "Sign up failed", e.message);
     }
     // optional catch-all
     catch (e) {
-      _showErrorDialog("Unexpected error", e.toString());
+      await showErrorDialog(
+        context,
+        "Unexpected error  try again later",
+        e.toString(),
+      );
     }
 
     return null;
-  }
-
-  Future<User?> signIn() async {
-    try {
-      final supabase = Supabase.instance.client;
-
-      final res = await supabase.auth.signInWithPassword(
-        email: controllerEmail.text,
-        password: controllerPassword.text,
-      );
-
-      if (res.user != null) {
-        print("Logged in");
-        return res.user;
-      } else {
-        return null;
-      }
-    } on AuthApiException {
-      if (!mounted) {
-        return null;
-      }
-      showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Failure in logging in'),
-          content: SizedBox(
-            width: 200.0,
-            height: 100.0,
-            child: Column(
-              children: [Text('Could not sign in with credentials')],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
-    return null;
-  }
-
-  void _showErrorDialog(String title, String message) {
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Center(child: Text(title)),
-        content: SizedBox(
-          width: 200.0,
-          height: 100.0,
-          child: Center(child: Text(message)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 }

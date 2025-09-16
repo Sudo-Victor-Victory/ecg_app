@@ -14,6 +14,9 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPassword = TextEditingController();
+  TextEditingController firstNameController = TextEditingController();
+  TextEditingController lastNameController = TextEditingController();
+
   bool passwordVisible = false;
   static const List<String> list = <String>[
     'For fun',
@@ -69,7 +72,6 @@ class _SignUpPageState extends State<SignUpPage> {
 
               SizedBox(
                 width: 250,
-
                 child: TextField(
                   controller: controllerPassword,
                   obscureText: !passwordVisible,
@@ -92,6 +94,29 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
               ),
+              SizedBox(
+                width: 250,
+                child: TextField(
+                  controller: firstNameController,
+                  onEditingComplete: () => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: "First Name",
+                    hintText: "Your first name",
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 250,
+                child: TextField(
+                  controller: lastNameController,
+                  onEditingComplete: () => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: "Last Name",
+                    hintText: "Your last name",
+                  ),
+                ),
+              ),
+
               Center(child: Text("Reason for joining?")),
               DropdownButton<String>(
                 value: dropdownValue,
@@ -162,6 +187,16 @@ class _SignUpPageState extends State<SignUpPage> {
         print("Signed up");
         print(res.toString());
       }
+      final insertUser = await supabase
+          .from('profiles')
+          .insert({
+            'id': res.user?.id,
+            "first_name": firstNameController.text,
+            "last_name": lastNameController.text,
+            "signup_reason": dropdownValue,
+          })
+          .select()
+          .single();
 
       return res.user;
     }

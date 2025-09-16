@@ -1,3 +1,4 @@
+import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
@@ -12,10 +13,10 @@ class IntroductionScreens extends StatelessWidget {
       body: IntroductionScreen(
         pages: [
           PageViewModel(
-            title: 'Welcome to empowering your health',
+            title: 'Welcome to the start of empowering your health.',
             body:
                 'This is the home page. It gives you an overview of devices, recent sessions, and contact. You can always tap (fill this) to view this guide again.',
-            image: buildImage("images/image_1.png"),
+            image: buildImage("images/ADD_IMAGE_LATER.png"),
             //getPageDecoration, a method to customise the page style
             decoration: getPageDecoration(),
           ),
@@ -23,30 +24,35 @@ class IntroductionScreens extends StatelessWidget {
             title: 'Bluetooth page',
             body:
                 'Here is where you can find and connect to your health devices like an ECG. Select the device you want and tap on it to attempt to connect.',
-            image: buildImage("images/image_2.png"),
-            //getPageDecoration, a method to customise the page style
+            image: buildImage("images/ADD_IMAGE_LATER.png"),
             decoration: getPageDecoration(),
           ),
           PageViewModel(
             title: 'Real time charting',
             body:
-                'Once you connect to the device, we will chart the data in real time as we receive it. Do not worry - all the data is being saved so have no fear.',
-            image: buildImage("images/image_3.png"),
-            //getPageDecoration, a method to customise the page style
+                'Once you connect to the device, we will chart the data in real time as we receive it. Do not worry - all the data is being saved so you can view it again.',
+            image: buildImage("images/ADD_IMAGE_LATER.png"),
             decoration: getPageDecoration(),
           ),
           PageViewModel(
             title: 'View previous charts',
             body:
                 "After a session is completed, you can view your session's chart anytime via the sessions page.",
-            image: buildImage("images/image_3.png"),
-            //getPageDecoration, a method to customise the page style
+            image: buildImage("images/ADD_IMAGE_LATER.png"),
             decoration: getPageDecoration(),
           ),
         ],
         onDone: () {
           if (kDebugMode) {
             print("Done clicked");
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return WidgetTree();
+                },
+              ),
+            );
           }
         },
         //ClampingScrollPhysics prevent the scroll offset from exceeding the bounds of the content.

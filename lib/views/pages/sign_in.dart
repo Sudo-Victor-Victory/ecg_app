@@ -89,11 +89,11 @@ class _LogInPageState extends State<LogInPage> {
               Center(
                 child: FilledButton(
                   onPressed: () async {
-                    var idk;
+                    var user;
                     print("attempting log in");
-                    idk = await signIn();
+                    user = await signIn();
 
-                    if (idk != null) {
+                    if (user != null) {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(

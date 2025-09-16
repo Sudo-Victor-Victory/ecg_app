@@ -21,7 +21,7 @@ class _SignUpPageState extends State<SignUpPage> {
   static const List<String> list = <String>[
     'For fun',
     'I like ECGs',
-    'Idk',
+    'user',
     'Why are you still reading this',
   ];
   String? dropdownValue;

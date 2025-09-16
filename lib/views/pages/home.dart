@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecg_app/views/widgets/greeting.dart';
+import 'package:ecg_app/utils/greeting.dart';
 import 'package:ecg_app/views/widgets/sessions_widget.dart';
 
 class HomePage extends StatefulWidget {

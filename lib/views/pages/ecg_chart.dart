@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:ecg_app/data/classes/ecg_packet.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
-import 'package:ecg_app/views/widgets/ble_manager.dart';
+import 'package:ecg_app/utils/ble_manager.dart';
 import 'package:ecg_app/views/widgets/bpm_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';

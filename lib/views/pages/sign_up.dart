@@ -1,5 +1,6 @@
+import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/utils/dialog_alert.dart';
-import 'package:ecg_app/views/widgets/widget_tree.dart';
+import 'package:ecg_app/views/pages/introduction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -145,11 +146,12 @@ class _SignUpPageState extends State<SignUpPage> {
                     newUser = await signUp();
 
                     if (newUser != null) {
+                      firstName = firstNameController.text;
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return WidgetTree();
+                            return const IntroductionScreens();
                           },
                         ),
                       );
@@ -187,7 +189,7 @@ class _SignUpPageState extends State<SignUpPage> {
         print("Signed up");
         print(res.toString());
       }
-      final insertUser = await supabase
+      await supabase
           .from('profiles')
           .insert({
             'id': res.user?.id,

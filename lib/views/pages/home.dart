@@ -1,3 +1,5 @@
+import 'package:ecg_app/data/classes/constants.dart';
+import 'package:ecg_app/views/pages/introduction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:ecg_app/utils/greeting.dart';
 import 'package:ecg_app/views/widgets/sessions_widget.dart';
@@ -27,7 +29,7 @@ class _HomePageState extends State<HomePage> {
             // Greeting
             Center(
               child: Text(
-                greetOnTimeOfDay(),
+                "${greetOnTimeOfDay()} $firstName",
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -97,7 +99,21 @@ class _HomePageState extends State<HomePage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Center(child: Text('Bottom Left')),
+                            child: Center(
+                              child: TextButton(
+                                onPressed: () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) {
+                                      return const IntroductionScreens();
+                                    },
+                                  ),
+                                ),
+                                child: Text(
+                                  "Tap me to view the instructions again?",
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),

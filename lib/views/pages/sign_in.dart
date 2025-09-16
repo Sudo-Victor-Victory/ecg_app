@@ -1,3 +1,4 @@
+import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/utils/dialog_alert.dart';
 import 'package:ecg_app/views/pages/sign_up.dart';
 import 'package:ecg_app/views/widgets/widget_tree.dart';
@@ -142,6 +143,16 @@ class _LogInPageState extends State<LogInPage> {
 
       if (res.user != null) {
         print("Logged in");
+        final response = await supabase
+            .from('profiles')
+            .select('first_name')
+            .eq(
+              'id',
+              res.user!.id,
+            ) // if you need to filter for the current user
+            .single();
+
+        firstName = response['first_name'] as String;
         return res.user;
       } else {
         return null;

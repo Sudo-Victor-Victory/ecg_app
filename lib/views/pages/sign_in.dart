@@ -1,4 +1,5 @@
 import 'package:ecg_app/utils/dialog_alert.dart';
+import 'package:ecg_app/views/pages/introduction_screen.dart';
 import 'package:ecg_app/views/pages/sign_up.dart';
 import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
@@ -122,6 +123,22 @@ class _LogInPageState extends State<LogInPage> {
                   },
 
                   child: Text("Don't have an account? Try signing up"),
+                ),
+              ),
+              Center(
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return IntroductionScreens();
+                        },
+                      ),
+                    );
+                  },
+
+                  child: Text("Onboard"),
                 ),
               ),
             ],

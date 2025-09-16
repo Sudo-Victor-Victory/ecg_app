@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecg_app/views/widgets/greeting.dart';
 import 'package:ecg_app/views/widgets/sessions_widget.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,98 +19,104 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final quadrantWidth = constraints.maxWidth / 2 - 8; // spacing
-            final quadrantHeight = constraints.maxHeight / 2 - 8;
-
-            return Column(
-              children: [
-                // Top row
-                Row(
-                  children: [
-                    // Top-left: Recent sessions
-                    SizedBox(
-                      width: quadrantWidth,
-                      height: quadrantHeight,
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Center(
-                                child: Text(
-                                  'Recent Sessions',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Greeting
+            Center(
+              child: Text(
+                greetOnTimeOfDay(),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Quadrant layout
+            SizedBox(
+              height:
+                  MediaQuery.of(context).size.height *
+                  0.8, // Adjust overall height
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Center(
+                                    child: Text(
+                                      'Recent Sessions',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(height: 8),
+                                  Expanded(child: SessionsTile(limit: 3)),
+                                ],
                               ),
-                              SizedBox(height: 8),
-                              Expanded(child: SessionsTile(limit: 3)),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 16),
-
-                    // Top-right placeholder
-                    SizedBox(
-                      width: quadrantWidth,
-                      height: quadrantHeight,
-                      child: Card(
-                        color: Colors.grey[200],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Card(
+                            color: Colors.grey[200],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Center(child: Text('Top Right')),
+                          ),
                         ),
-                        child: const Center(child: Text('Top Right')),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Bottom row
-                Row(
-                  children: [
-                    SizedBox(
-                      width: quadrantWidth,
-                      height: quadrantHeight,
-                      child: Card(
-                        color: Colors.grey[200],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                  ),
+                  const SizedBox(height: 16),
+                  // Bottom row (takes up less space)
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Card(
+                            color: Colors.grey[200],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Center(child: Text('Bottom Left')),
+                          ),
                         ),
-                        child: const Center(child: Text('Bottom Left')),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    SizedBox(
-                      width: quadrantWidth,
-                      height: quadrantHeight,
-                      child: Card(
-                        color: Colors.grey[200],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Card(
+                            color: Colors.grey[200],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Center(child: Text('Bottom Right')),
+                          ),
                         ),
-                        child: const Center(child: Text('Bottom Right')),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
-            );
-          },
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

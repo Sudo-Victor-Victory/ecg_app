@@ -26,7 +26,9 @@ class _SessionsTileState extends State<SessionsTile> {
 
   /// Returns (limit) amount of sessions the user owns.
   Future<void> fetchSessions({int? limit}) async {
+    if (!mounted) return;
     setState(() => isLoadingSessions = true);
+
     var query = client
         .from('ecg_session')
         .select('*')
@@ -34,6 +36,8 @@ class _SessionsTileState extends State<SessionsTile> {
     if (limit != null) query = query.limit(limit);
 
     final data = await query;
+
+    if (!mounted) return;
     setState(() {
       supabaseSessions = List<Map<String, dynamic>>.from(data);
       isLoadingSessions = false;

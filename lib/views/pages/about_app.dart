@@ -21,7 +21,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
   void _copyPhone(BuildContext context) {
     Clipboard.setData(
       const ClipboardData(
-        text: '+1 (323) 381-4466', // <-- your phone number here
+        text: '+1 (323) 381-4466', 
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(

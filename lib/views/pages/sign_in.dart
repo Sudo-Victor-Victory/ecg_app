@@ -144,15 +144,15 @@ class _LogInPageState extends State<LogInPage> {
       if (res.user != null) {
         print("Logged in");
         final response = await supabase
-            .from('profiles')
-            .select('first_name')
+            .from(KTables.userProfile)
+            .select(KProfileColumns.firstName)
             .eq(
               'id',
               res.user!.id,
             ) // if you need to filter for the current user
             .single();
 
-        firstName = response['first_name'] as String;
+        firstName = response[KProfileColumns.firstName] as String;
         return res.user;
       } else {
         return null;

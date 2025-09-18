@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
                                     child: Text(
                                       'Recent Sessions',
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 24,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -91,7 +91,7 @@ class _HomePageState extends State<HomePage> {
                                     child: Text(
                                       'Recent Devices',
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 24,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),

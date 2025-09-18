@@ -1,3 +1,4 @@
+import 'package:ecg_app/data/classes/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
@@ -30,9 +31,9 @@ class _SessionsTileState extends State<SessionsTile> {
     setState(() => isLoadingSessions = true);
 
     var query = client
-        .from('ecg_session')
+        .from(KTables.ecgSession)
         .select('*')
-        .order('start_time', ascending: false);
+        .order(KSessionColumns.startTime, ascending: false);
     if (limit != null) query = query.limit(limit);
 
     final data = await query;
@@ -63,9 +64,9 @@ class _SessionsTileState extends State<SessionsTile> {
     // the postgres database.
     while (true) {
       final chunk = await client
-          .from('ecg_data')
+          .from(KTables.ecgData)
           .select('*')
-          .eq('session_id', sessionId)
+          .eq(KECGDataColumns.sessionId, sessionId)
           .range(from, to);
 
       if (chunk.isEmpty) break;
@@ -126,7 +127,7 @@ class _SessionsTileState extends State<SessionsTile> {
 
   Widget _buildSessionTile(Map<String, dynamic> session, int index) {
     final startDate = DateTime.parse(session['start_time']).toLocal();
-    final endDate = DateTime.parse(session['end_time']).toLocal();
+    final endDate = DateTime.parse(session[KSessionColumns.endTime]).toLocal();
     final duration = endDate.difference(startDate);
     final startText = DateFormat('yyyy-MM-dd HH:mm').format(startDate);
     final endText = DateFormat('yyyy-MM-dd HH:mm').format(endDate);
@@ -157,19 +158,22 @@ class _SessionsTileState extends State<SessionsTile> {
                         Text(
                           "Session $index",
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} $unitOfTime",
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 16,
                             color: Colors.grey,
                           ),
                         ),
-                        Text('Start: $startText, End: $endText'),
+                        Text(
+                          'Start: $startText, End: $endText',
+                          style: const TextStyle(fontSize: 16),
+                        ),
                       ],
                     ),
                   ),

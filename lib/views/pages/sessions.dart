@@ -1,3 +1,4 @@
+import 'package:ecg_app/data/classes/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -24,9 +25,9 @@ class _SessionsState extends State<Sessions> {
   /// Returns all sessions from Supabase that the user owns.
   Future<void> fetchSessionsNoLimit() async {
     final data = await supabase
-        .from('ecg_session')
+        .from(KTables.ecgSession)
         .select('*')
-        .order('start_time', ascending: false);
+        .order(KSessionColumns.startTime, ascending: false);
 
     setState(() {
       supabaseSessions = List<Map<String, dynamic>>.from(data);

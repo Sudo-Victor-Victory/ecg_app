@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/data/classes/ecg_packet.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:ecg_app/utils/ble_manager.dart';
@@ -34,7 +35,7 @@ class _EcgChartState extends State<EcgChart> {
   // 2 seconds width of visible chart
   static const double chartWindowSizeMs = 2000.0;
   // Time interval between samples (4ms → 250Hz sample rate)
-  static const double samplePeriodMs = 4.0;
+  static const double samplePeriodMs = KEcgConstants.sampleSpacingMs;
   // Number of samples to plot per 16ms timer tick (~60 fps screen refresh)
   static const int samplesPerFrame = 4;
   // Number of samples to accumulate before starting charting (~1s buffer)
@@ -225,12 +226,12 @@ class _EcgChartState extends State<EcgChart> {
       // Uses insert to create a new session and is followed by
       // select to immediately get the session id for insertion in ecg_data.
       final insertedSession = await client
-          .from('ecg_session')
-          .insert({'user_id': userId})
+          .from(KTables.ecgSession)
+          .insert({KSessionColumns.userId: userId})
           .select()
           .single();
 
-      currentSessionId = insertedSession['id'] as String;
+      currentSessionId = insertedSession[KSessionColumns.id] as String;
       print('Inserted ECG session: $insertedSession');
     } catch (e) {
       print('Error inserting ECG session: $e');
@@ -248,10 +249,10 @@ class _EcgChartState extends State<EcgChart> {
     if (currentSessionId == null) return;
 
     _supabaseBuffer.add({
-      'session_id': currentSessionId,
-      'timestamp_ms': packet.timestamp,
-      'ecg_data': packet.samples,
-      'bpm': packet.bpm,
+      KECGDataColumns.sessionId: currentSessionId,
+      KECGDataColumns.timestamp: packet.timestamp,
+      KECGDataColumns.ecgData: packet.samples,
+      KECGDataColumns.bpm: packet.bpm,
     });
 
     if (_supabaseBuffer.length >= supabaseBatchSize) {
@@ -269,7 +270,7 @@ class _EcgChartState extends State<EcgChart> {
     _supabaseBuffer.clear();
 
     try {
-      await client.from('ecg_data').insert(batch);
+      await client.from(KTables.ecgData).insert(batch);
       print("Inserted ${batch.length} ECG rows");
     } catch (e) {
       debugPrint("Supabase insert failed: $e");
@@ -284,9 +285,11 @@ class _EcgChartState extends State<EcgChart> {
     try {
       final client = Supabase.instance.client;
       await client
-          .from('ecg_session')
-          .update({'end_time': DateTime.now().toUtc().toIso8601String()})
-          .eq('id', currentSessionId!);
+          .from(KTables.ecgSession)
+          .update({
+            KSessionColumns.endTime: DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq(KSessionColumns.id, currentSessionId!);
       print("Session $currentSessionId has come to an end");
     } catch (e) {
       print("Error ending Supabase session: $e");

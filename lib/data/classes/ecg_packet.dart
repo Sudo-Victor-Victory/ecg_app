@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:ecg_app/data/classes/constants.dart';
+
 class EcgPacket {
   // Currently is 24 bytes - 10 samples of 2 byte length
   // and a 4 byte timestamp.
@@ -10,7 +12,7 @@ class EcgPacket {
   EcgPacket(this.samples, this.timestamp, this.bpm);
 
   static EcgPacket? fromBytes(List<int> value) {
-    if (value.length != 28) {
+    if (value.length != KEcgConstants.packetSize) {
       print("Unexpected packet size: ${value.length}");
       return null;
     }

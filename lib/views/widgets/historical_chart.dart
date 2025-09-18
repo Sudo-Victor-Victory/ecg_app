@@ -1,3 +1,4 @@
+import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/views/pages/ecg_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -34,7 +35,7 @@ class _HistoricalChartState extends State<HistoricalChart> {
   double yAxisBound = 0;
 
   // Time between samples from ESP32
-  static const double sampleSpacing = 4.0;
+  static const double sampleSpacing = KEcgConstants.sampleSpacingMs;
   @override
   void initState() {
     super.initState();
@@ -53,8 +54,9 @@ class _HistoricalChartState extends State<HistoricalChart> {
     final dataPoints = <EcgDataPoint>[];
     final startMs = widget.startTime.millisecondsSinceEpoch.toDouble();
     for (var row in widget.ecgRows) {
-      final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
-      final samples = List<int>.from(row['ecg_data']);
+      final timestampMs =
+          (row[KECGDataColumns.timestamp] as int).toDouble() + startMs;
+      final samples = List<int>.from(row[KTables.ecgData]);
       for (int i = 0; i < samples.length; i++) {
         dataPoints.add(
           EcgDataPoint(timestampMs + i * sampleSpacing, samples[i].toDouble()),
@@ -69,8 +71,9 @@ class _HistoricalChartState extends State<HistoricalChart> {
   List<EcgDataPoint> _buildBpmPoints() {
     final startMs = widget.startTime.millisecondsSinceEpoch.toDouble();
     return widget.ecgRows.map((row) {
-      final timestampMs = (row['timestamp_ms'] as int).toDouble() + startMs;
-      return EcgDataPoint(timestampMs, (row['bpm']).toDouble());
+      final timestampMs =
+          (row[KECGDataColumns.timestamp] as int).toDouble() + startMs;
+      return EcgDataPoint(timestampMs, (row[KECGDataColumns.bpm]).toDouble());
     }).toList();
   }
 

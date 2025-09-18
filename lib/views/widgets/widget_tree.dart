@@ -30,7 +30,7 @@ final List<PageConfig> navbarPages = [
   PageConfig(
     title: "Home page",
     color: const Color(0xFF086788),
-    page: HomePage(appBarTitle: "Home page", appBarColor: Color(0xFF086788)),
+    page: HomePage(),
     icon: Icons.home,
     label: "Home",
   ),

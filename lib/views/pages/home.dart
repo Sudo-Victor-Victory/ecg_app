@@ -8,13 +8,7 @@ import 'package:ecg_app/utils/greeting.dart';
 import 'package:ecg_app/views/widgets/sessions_widget.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({
-    super.key,
-    required this.appBarTitle,
-    required this.appBarColor,
-  });
-  final String appBarTitle;
-  final Color appBarColor;
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -32,7 +26,7 @@ class _HomePageState extends State<HomePage> {
             // Greeting
             Center(
               child: ScaledText(
-                '"${greetOnTimeOfDay()} $firstName"',
+                '${greetOnTimeOfDay()} $firstName',
                 baseSize: KTextSize.xl,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -60,10 +54,10 @@ class _HomePageState extends State<HomePage> {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   const Center(
-                                    child: Text(
+                                    child: ScaledText(
                                       'Recent Sessions',
+                                      baseSize: KTextSize.lg,
                                       style: TextStyle(
-                                        fontSize: 24,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -87,8 +81,9 @@ class _HomePageState extends State<HomePage> {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Center(
-                                    child: Text(
+                                    child: ScaledText(
                                       'Recent Devices',
+                                      baseSize: KTextSize.lg,
                                       style: TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,

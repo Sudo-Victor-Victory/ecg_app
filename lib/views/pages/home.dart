@@ -2,6 +2,7 @@ import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/views/pages/about_app.dart';
 import 'package:ecg_app/views/pages/introduction_screen.dart';
 import 'package:ecg_app/views/widgets/ble_recent.dart';
+import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:flutter/material.dart';
 import 'package:ecg_app/utils/greeting.dart';
 import 'package:ecg_app/views/widgets/sessions_widget.dart';
@@ -30,12 +31,10 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Greeting
             Center(
-              child: Text(
-                "${greetOnTimeOfDay()} $firstName",
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: ScaledText(
+                '"${greetOnTimeOfDay()} $firstName"',
+                baseSize: KTextSize.xl,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 16),

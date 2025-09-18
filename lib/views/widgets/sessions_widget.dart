@@ -1,4 +1,5 @@
 import 'package:ecg_app/data/classes/constants.dart';
+import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
@@ -94,11 +95,11 @@ class _SessionsTileState extends State<SessionsTile> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
-                  child: Text(
+                  child: ScaledText(
                     'Session ${DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime)}',
-                    overflow: TextOverflow.ellipsis,
+
+                    baseSize: 18,
                     style: const TextStyle(
-                      fontSize: 40,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
@@ -155,24 +156,34 @@ class _SessionsTileState extends State<SessionsTile> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        ScaledText(
                           "Session $index",
+
+                          baseSize: 18,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+
                         const SizedBox(height: 2),
-                        Text(
+                        ScaledText(
                           "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} $unitOfTime",
+                          baseSize: 18,
                           style: const TextStyle(
                             fontSize: 16,
+                            fontWeight: FontWeight.bold,
                             color: Colors.grey,
                           ),
                         ),
-                        Text(
+                        ScaledText(
                           'Start: $startText, End: $endText',
-                          style: const TextStyle(fontSize: 16),
+
+                          baseSize: 18,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),

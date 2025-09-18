@@ -1,4 +1,5 @@
 import 'package:ecg_app/utils/ble_manager.dart';
+import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -50,7 +51,7 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
     return ListView.builder(
       itemCount: _devices.length,
       itemBuilder: (context, index) {
-        final d = _devices[index];
+        final currentDevice = _devices[index];
 
         return Card(
           elevation: 3,
@@ -59,7 +60,7 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
-            onTap: () => _connectTo(d['id']!),
+            onTap: () => _connectTo(currentDevice['id']!),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -71,18 +72,18 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          d['name'] ?? 'Unknown',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        ScaledText(
+                          currentDevice['name'] ?? 'Unknown',
+                          baseSize: 16,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
+
                         const SizedBox(height: 4),
-                        Text(
-                          d['id'] ?? '',
+                        ScaledText(
+                          currentDevice['id'] ?? '',
+                          baseSize: 14,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
                             color: Colors.grey,
                           ),
                         ),
@@ -94,7 +95,7 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
                       Icons.bluetooth_connected,
                       color: Colors.lightBlue,
                     ),
-                    onPressed: () => _connectTo(d['id']!),
+                    onPressed: () => _connectTo(currentDevice['id']!),
                   ),
                 ],
               ),

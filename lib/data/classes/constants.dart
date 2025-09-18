@@ -45,7 +45,11 @@ class KEcgConstants {
 
 /// Text / font sizes
 class KTextSize {
-  static const double body = 14.0;
-  static const double title = 18.0;
-  static const double headline = 24.0;
+  static const double xs = 14.0;
+  static const double sm = 16.0;
+  static const double md = 18.0;
+  static const double lg = 24.0;
+  static const double xl = 30.0;
+  static const double xxl = 38.0;
+  static const double xxxl = 40.0;
 }

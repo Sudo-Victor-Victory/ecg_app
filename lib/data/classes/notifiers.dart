@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 ValueNotifier<bool> isDarkModeNotifier = ValueNotifier(true);
 ValueNotifier<int> selectedPageNotifier = ValueNotifier(0);
 ValueNotifier<DeviceWrapper?> connectedDevice = ValueNotifier(null);
 ValueNotifier<int> bpm = ValueNotifier(0);
+ValueNotifier<double> textSize = ValueNotifier(1.0);
 
 class DeviceWrapper {
   final BluetoothDevice device;
@@ -19,4 +21,14 @@ class DeviceWrapper {
 
   @override
   int get hashCode => device.remoteId.hashCode;
+}
+
+Future<void> loadTextSize() async {
+  final prefs = await SharedPreferences.getInstance();
+  textSize.value = prefs.getDouble('textSize') ?? 1.0;
+}
+
+Future<void> saveTextSize(double value) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setDouble('textSize', value);
 }

@@ -1,6 +1,7 @@
 import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/views/pages/about_app.dart';
 import 'package:ecg_app/views/pages/introduction_screen.dart';
+import 'package:ecg_app/views/widgets/ble_recent.dart';
 import 'package:flutter/material.dart';
 import 'package:ecg_app/utils/greeting.dart';
 import 'package:ecg_app/views/widgets/sessions_widget.dart';
@@ -78,11 +79,28 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: Card(
-                            color: Colors.grey[200],
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Center(child: Text('Top Right')),
+                            child: const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Center(
+                                    child: Text(
+                                      'Recent Devices',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Expanded(child: RecentDevicesTile()),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],

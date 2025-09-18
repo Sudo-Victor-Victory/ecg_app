@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ecg_app/data/classes/ecg_packet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -42,7 +42,7 @@ class BleEcgManager extends ChangeNotifier {
     await device.connect(timeout: const Duration(seconds: 10));
     _connected = true;
     notifyListeners();
-
+    await _saveRecentDevice(device);
     final services = await device.discoverServices();
     final ecgChar = services
         .expand((s) => s.characteristics)
@@ -68,5 +68,27 @@ class BleEcgManager extends ChangeNotifier {
     _device = null;
     _connected = false;
     notifyListeners();
+  }
+
+  /// Saves a reference to last 3 successfully connected bluetooth devices via
+  /// shared prefs.
+  Future<void> _saveRecentDevice(BluetoothDevice device) async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = device.platformName.isNotEmpty
+        ? device.platformName
+        : 'Unnamed Device';
+
+    // Each item stored as "name|id"
+    final entry = '$name|${device.remoteId}';
+    final list = prefs.getStringList('recent_devices') ?? [];
+
+    // Remove if already exists (so newest goes first)
+    list.removeWhere((e) => e.split('|')[1] == device.remoteId.toString());
+    list.insert(0, entry);
+
+    // Only keep last 3
+    if (list.length > 3) list.removeRange(3, list.length);
+
+    await prefs.setStringList('recent_devices', list);
   }
 }

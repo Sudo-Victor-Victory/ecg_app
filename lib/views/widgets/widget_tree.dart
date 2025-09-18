@@ -3,6 +3,7 @@ import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:ecg_app/views/pages/ecg_page.dart';
 import 'package:ecg_app/views/pages/home.dart';
 import 'package:ecg_app/views/pages/sessions.dart';
+import 'package:ecg_app/views/pages/settings_page.dart';
 import 'package:ecg_app/views/widgets/navbar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +30,7 @@ final List<PageConfig> navbarPages = [
   PageConfig(
     title: "Home page",
     color: const Color(0xFF086788),
-    page: HomePage(appBarTitle: "Home page", appBarColor: Color(0xFF086788)),
+    page: HomePage(),
     icon: Icons.home,
     label: "Home",
   ),
@@ -76,16 +77,28 @@ class WidgetTree extends StatelessWidget {
           appBar: AppBar(
             title: Text(
               config.title,
-              style: TextStyle(
-                color: Colors.black,
+              style: const TextStyle(
+                fontSize: 38,
                 fontWeight: FontWeight.bold,
-                fontSize: 30.0,
+                color: Colors.black,
               ),
             ),
             backgroundColor: config.color,
             centerTitle: true,
             actions: [
-              IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return SettingsPage(title: "Settings wow");
+                      },
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.settings),
+              ),
               IconButton(
                 onPressed: () async {
                   final SharedPreferences prefs =

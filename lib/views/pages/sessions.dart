@@ -1,3 +1,5 @@
+import 'package:ecg_app/data/classes/constants.dart';
+import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -24,9 +26,9 @@ class _SessionsState extends State<Sessions> {
   /// Returns all sessions from Supabase that the user owns.
   Future<void> fetchSessionsNoLimit() async {
     final data = await supabase
-        .from('ecg_session')
+        .from(KTables.ecgSession)
         .select('*')
-        .order('start_time', ascending: false);
+        .order(KSessionColumns.startTime, ascending: false);
 
     setState(() {
       supabaseSessions = List<Map<String, dynamic>>.from(data);
@@ -41,14 +43,25 @@ class _SessionsState extends State<Sessions> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Sessions'),
+            ScaledText(
+              'Sessions',
+              baseSize: KTextSize.xxl,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+
             const SizedBox(width: 8),
             // Animate the session count
             TweenAnimationBuilder<int>(
               tween: IntTween(begin: 0, end: supabaseSessions.length),
               duration: const Duration(milliseconds: 800),
               builder: (context, value, _) {
-                return Text('($value)', style: const TextStyle(fontSize: 16));
+                return Text(
+                  '($value)',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
               },
             ),
           ],

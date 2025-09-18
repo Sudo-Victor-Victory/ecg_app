@@ -261,7 +261,7 @@ class _BleScannerState extends State<BleScanner> {
                 ],
               ),
             ),
-            const Icon(Icons.bluetooth),
+            const Icon(Icons.bluetooth, color: Colors.lightBlue),
           ],
         ),
       ),

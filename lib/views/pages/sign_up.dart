@@ -190,12 +190,12 @@ class _SignUpPageState extends State<SignUpPage> {
         print(res.toString());
       }
       await supabase
-          .from('profiles')
+          .from(KTables.userProfile)
           .insert({
-            'id': res.user?.id,
-            "first_name": firstNameController.text,
-            "last_name": lastNameController.text,
-            "signup_reason": dropdownValue,
+            KProfileColumns.id: res.user?.id,
+            KProfileColumns.firstName: firstNameController.text,
+            KProfileColumns.lastName: lastNameController.text,
+            KProfileColumns.signUpReason: dropdownValue,
           })
           .select()
           .single();

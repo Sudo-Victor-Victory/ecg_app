@@ -2,18 +2,13 @@ import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/views/pages/about_app.dart';
 import 'package:ecg_app/views/pages/introduction_screen.dart';
 import 'package:ecg_app/views/widgets/ble_recent.dart';
+import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:flutter/material.dart';
 import 'package:ecg_app/utils/greeting.dart';
 import 'package:ecg_app/views/widgets/sessions_widget.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({
-    super.key,
-    required this.appBarTitle,
-    required this.appBarColor,
-  });
-  final String appBarTitle;
-  final Color appBarColor;
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -30,12 +25,10 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Greeting
             Center(
-              child: Text(
-                "${greetOnTimeOfDay()} $firstName",
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: ScaledText(
+                '${greetOnTimeOfDay()} $firstName',
+                baseSize: KTextSize.xl,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 16),
@@ -61,10 +54,10 @@ class _HomePageState extends State<HomePage> {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   const Center(
-                                    child: Text(
+                                    child: ScaledText(
                                       'Recent Sessions',
+                                      baseSize: KTextSize.lg,
                                       style: TextStyle(
-                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -88,10 +81,11 @@ class _HomePageState extends State<HomePage> {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Center(
-                                    child: Text(
+                                    child: ScaledText(
                                       'Recent Devices',
+                                      baseSize: KTextSize.lg,
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 24,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),

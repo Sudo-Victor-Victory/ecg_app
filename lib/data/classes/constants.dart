@@ -6,7 +6,6 @@ class KConstants {
 String firstName = '';
 
 /// Database table names
-/// Database table names
 class KTables {
   static const ecgSession = 'ecg_session';
   static const userProfile = 'profiles';

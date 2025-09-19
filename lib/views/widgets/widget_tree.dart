@@ -2,6 +2,7 @@ import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:ecg_app/views/pages/ecg_page.dart';
 import 'package:ecg_app/views/pages/home.dart';
+import 'package:ecg_app/views/pages/profile_page.dart';
 import 'package:ecg_app/views/pages/sessions.dart';
 import 'package:ecg_app/views/pages/settings_page.dart';
 import 'package:ecg_app/views/widgets/navbar_widget.dart';
@@ -47,7 +48,7 @@ final List<PageConfig> navbarPages = [
   PageConfig(
     title: "Profile page",
     color: Color(0XFFFF0000),
-    page: const Center(child: Text("Profile page")),
+    page: ProfilePage(),
     icon: Icons.person,
     label: "Profile",
   ),

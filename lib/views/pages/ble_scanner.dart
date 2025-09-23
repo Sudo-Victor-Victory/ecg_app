@@ -175,16 +175,18 @@ class _BleScannerState extends State<BleScanner> {
           content: SizedBox(
             width: 200.0,
             height: 100.0,
-            child: Column(
-              children: [
-                Lottie.asset(
-                  'assets/lotties/bluetooth.json',
-                  fit: BoxFit.cover,
-                  height: 100.0,
-                  width: 50.0,
-                ),
-                Text('Successfully connected to $name'),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Lottie.asset(
+                    'assets/lotties/bluetooth.json',
+                    fit: BoxFit.cover,
+                    height: 50.0,
+                    width: 50.0,
+                  ),
+                  Text('Successfully connected to $name'),
+                ],
+              ),
             ),
           ),
           actions: [

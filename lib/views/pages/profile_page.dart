@@ -62,7 +62,10 @@ class _ProfilePageState extends State<ProfilePage>
     }
 
     final totalPoints = (calculatedSessionTime / 4).round();
-    // add a if thing is not null
+
+    if (!mounted) {
+      return;
+    }
     setState(() {
       signupReason = profileRes?[KProfileColumns.signUpReason] ?? 'N/A';
       totalSessions = sessions.length;

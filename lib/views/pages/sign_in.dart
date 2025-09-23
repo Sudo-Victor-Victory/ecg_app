@@ -1,6 +1,7 @@
 import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/utils/dialog_alert.dart';
 import 'package:ecg_app/views/pages/sign_up.dart';
+import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -22,8 +23,18 @@ class _LogInPageState extends State<LogInPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Log in", selectionColor: Color(0xFF1D1B14)),
-        backgroundColor: Color(0xFF07A0C3),
+        title: Center(
+          child: ScaledText(
+            "Sign in",
+            baseSize: KTextSize.xxxl,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: KColors.eerieBlack,
+            ),
+          ),
+        ),
+
+        backgroundColor: KColors.blueGreen,
       ),
       body: SingleChildScrollView(
         child: FractionallySizedBox(
@@ -97,11 +108,7 @@ class _LogInPageState extends State<LogInPage> {
                     if (user != null) {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return WidgetTree();
-                          },
-                        ),
+                        MaterialPageRoute(builder: (context) => WidgetTree()),
                       );
                     }
                   },

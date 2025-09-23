@@ -1,3 +1,5 @@
+import 'package:ecg_app/data/classes/constants.dart';
+import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +11,18 @@ class IntroductionScreens extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: ScaledText(
+          "Introduction",
+          baseSize: KTextSize.xxxl,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: KColors.eerieBlack,
+          ),
+        ),
+        backgroundColor: KColors.red,
+        centerTitle: true, // 👈 this is the magic
+      ),
       body: IntroductionScreen(
         pages: [
           PageViewModel(
@@ -17,7 +30,6 @@ class IntroductionScreens extends StatelessWidget {
             body:
                 'This is the home page. It gives you an overview of devices, recent sessions, and contact. You can always tap (fill this) to view this guide again.',
             image: buildImage("images/ADD_IMAGE_LATER.png"),
-            //getPageDecoration, a method to customise the page style
             decoration: getPageDecoration(),
           ),
           PageViewModel(
@@ -47,11 +59,7 @@ class IntroductionScreens extends StatelessWidget {
             print("Done clicked");
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return WidgetTree();
-                },
-              ),
+              MaterialPageRoute(builder: (context) => WidgetTree()),
             );
           }
         },
@@ -64,6 +72,8 @@ class IntroductionScreens extends StatelessWidget {
         next: const Icon(Icons.forward),
         done: const Text("Done", style: TextStyle(fontWeight: FontWeight.w600)),
         dotsDecorator: getDotsDecorator(),
+
+        globalFooter: const SizedBox(height: 25),
       ),
     );
   }
@@ -80,7 +90,7 @@ class IntroductionScreens extends StatelessWidget {
       pageColor: Colors.white,
       bodyPadding: EdgeInsets.only(top: 8, left: 20, right: 20),
       titlePadding: EdgeInsets.only(top: 50),
-      bodyTextStyle: TextStyle(color: Colors.black54, fontSize: 15),
+      bodyTextStyle: TextStyle(color: KColors.eerieBlack, fontSize: 15),
     );
   }
 

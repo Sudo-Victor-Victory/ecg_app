@@ -39,16 +39,24 @@ class _MyAppState extends State<MyApp> {
       valueListenable: isDarkModeNotifier,
       builder: (context, isDarkMode, child) {
         return MaterialApp(
-          title: 'ECG app',
-          // Removes the ugly debug banner
           debugShowCheckedModeBanner: false,
+          title: 'ECG app',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: Color(0xFF086788),
-              brightness: isDarkMode ? Brightness.dark : Brightness.light,
+              seedColor: const Color(0xFF086788), // light mode primary
+              brightness: Brightness.light,
             ),
+            useMaterial3: true,
           ),
-          home: LogInPage(),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF1E3A8A), // dark mode primary
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: const LogInPage(),
         );
       },
     );

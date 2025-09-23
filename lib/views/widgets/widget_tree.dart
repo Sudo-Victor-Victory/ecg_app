@@ -30,31 +30,31 @@ class PageConfig {
 final List<PageConfig> navbarPages = [
   PageConfig(
     title: "Home page",
-    color: const Color(0xFF086788),
+    color: KColors.cerulean,
     page: HomePage(),
     icon: Icons.home,
     label: "Home",
   ),
   PageConfig(
-    title: "Connect to ECG Device",
-    color: const Color(0xFFF0C808),
+    title: "Connect to ",
+    color: KColors.jonquil,
     page: EcgPage(
       appBarColor: Color.fromARGB(255, 206, 157, 24),
-      appBarTitle: "Connect to ECG",
+      appBarTitle: "Connect to",
     ),
     icon: Icons.bluetooth,
     label: "Bluetooth",
   ),
   PageConfig(
     title: "Profile page",
-    color: Color(0XFFFF0000),
+    color: KColors.red,
     page: ProfilePage(),
     icon: Icons.person,
     label: "Profile",
   ),
   PageConfig(
     title: "Sessions",
-    color: const Color(0xFF07A0C3),
+    color: KColors.blueGreen,
     page: Sessions(),
     icon: Icons.show_chart_sharp,
     label: "ECG Sessions",
@@ -79,7 +79,7 @@ class WidgetTree extends StatelessWidget {
             title: Text(
               config.title,
               style: const TextStyle(
-                fontSize: 38,
+                fontSize: KTextSize.lg,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),

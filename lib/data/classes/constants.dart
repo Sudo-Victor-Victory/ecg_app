@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 class KConstants {
   static const String brightnessKey = 'brightnessKey';
 }
@@ -51,4 +53,12 @@ class KTextSize {
   static const double xl = 30.0;
   static const double xxl = 38.0;
   static const double xxxl = 40.0;
+}
+
+class KColors {
+  static const Color cerulean = Color(0xFF086788);
+  static const Color jonquil = Color(0xFFF0C808);
+  static const Color red = Color(0XFFFF0000);
+  static const Color blueGreen = Color(0xFF07A0C3);
+  static const Color eerieBlack = Color(0xFF1D1B14);
 }

@@ -35,7 +35,11 @@ class _EcgPageState extends State<EcgPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // ECG status
                     Expanded(child: EcgStatusWidget()),
+                    // Button next to status
+                    // Button's text and functionality changes depending on its
+                    // connectivity
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -59,6 +63,7 @@ class _EcgPageState extends State<EcgPage> {
                   ],
                 ),
               ),
+              // Page content - also dynamic on the selected page
               Expanded(
                 child: wrapper == null
                     ? BleScanner(

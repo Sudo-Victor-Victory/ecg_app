@@ -3,8 +3,9 @@ import 'dart:typed_data';
 import 'package:ecg_app/data/classes/constants.dart';
 
 class EcgPacket {
-  // Currently is 24 bytes - 10 samples of 2 byte length
+  // Currently is 28 bytes - 10 samples of 2 byte length
   // and a 4 byte timestamp.
+  // then 2 bytes for BPM and 2 more for padding
   final List<int> samples; // 10 samples
   final int timestamp; // 4-byte timestamp
   final int bpm; // 2 byte bpm

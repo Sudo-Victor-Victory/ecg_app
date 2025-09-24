@@ -165,7 +165,7 @@ class _EcgChartState extends State<EcgChart> {
     final double maxX = latestEcgTime;
 
     return Stack(
-      children: <Widget>[
+      children: [
         SafeArea(
           child: Container(
             color: KColors.eerieBlack,
@@ -202,6 +202,7 @@ class _EcgChartState extends State<EcgChart> {
             ),
           ),
         ),
+        // The BPM widget
         Positioned(top: -5, right: 40, child: BpmWidget()),
       ],
     );

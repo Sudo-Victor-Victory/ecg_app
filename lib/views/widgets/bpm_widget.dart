@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 
+/// Displays the BPM received while a device is connected
 class BpmWidget extends StatelessWidget {
   const BpmWidget({super.key});
 

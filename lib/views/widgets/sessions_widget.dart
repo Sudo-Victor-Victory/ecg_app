@@ -6,9 +6,11 @@ import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ecg_app/views/widgets/historical_chart.dart';
 
+/// Displays either the most 3 recent or all sessions within a listview.
 class SessionsTile extends StatefulWidget {
   final int? limit;
-  final bool isHomePage; // new param
+  // Changes the view of the SessionTile if it is within the home page
+  final bool isHomePage;
   const SessionsTile({super.key, this.limit, this.isHomePage = false});
 
   @override
@@ -130,6 +132,7 @@ class _SessionsTileState extends State<SessionsTile> {
     );
   }
 
+  /// Constructs the individual item within a ListView
   Widget _buildSessionTile(Map<String, dynamic> session, int index) {
     final startDate = DateTime.parse(session['start_time']).toLocal();
     final endDate = DateTime.parse(session[KSessionColumns.endTime]).toLocal();

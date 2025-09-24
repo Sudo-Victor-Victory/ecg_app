@@ -1,3 +1,4 @@
+/// Free widget that displays a greeting based on the time of day
 String greetOnTimeOfDay() {
   DateTime now = DateTime.now();
   String greeting = "Good Morning!!";

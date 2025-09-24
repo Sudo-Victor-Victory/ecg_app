@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Used to display a slide-up anim on cards
 class AnimatedCard extends StatefulWidget {
   final Widget child;
   final int delay;

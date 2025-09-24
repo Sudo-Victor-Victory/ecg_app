@@ -142,7 +142,6 @@ class _SessionsTileState extends State<SessionsTile> {
         "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} $unitOfTime";
 
     final cardPadding = widget.isHomePage ? 24.0 : 16.0;
-    final imageWidth = widget.isHomePage ? 70.0 : 50.0;
 
     return Card(
       elevation: 3,
@@ -158,9 +157,10 @@ class _SessionsTileState extends State<SessionsTile> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image(
-                      image: const AssetImage('assets/lotties/temp_img.jpg'),
-                      width: imageWidth,
+                    const Icon(
+                      Icons.monitor_heart,
+                      size: 50,
+                      color: KColors.red,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -204,13 +204,13 @@ class _SessionsTileState extends State<SessionsTile> {
                         IconButton(
                           icon: const Icon(
                             Icons.show_chart,
-                            color: Colors.lightBlue,
+                            color: KColors.blueGreen,
                           ),
                           onPressed: () =>
                               _retrieveDataAndChart(session, chartBPM: false),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.favorite, color: Colors.red),
+                          icon: const Icon(Icons.favorite, color: KColors.red),
                           onPressed: () =>
                               _retrieveDataAndChart(session, chartBPM: true),
                         ),

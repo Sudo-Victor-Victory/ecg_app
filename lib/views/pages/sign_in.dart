@@ -42,106 +42,106 @@ class _LogInPageState extends State<LogInPage> {
             bottom:
                 MediaQuery.of(context).viewInsets.bottom + 20, // extra space
           ),
-        child: FractionallySizedBox(
-          child: Column(
-            children: [
-              Center(
-                child: Text(
-                  "Welcome to\nReal Time ECG (RTECG)",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.teal,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
-                    fontSize: 30.0,
+          child: FractionallySizedBox(
+            child: Column(
+              children: [
+                Center(
+                  child: Text(
+                    "Welcome to\nReal Time ECG (RTECG)",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 30.0,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(
-                child: Lottie.asset(
-                  'assets/lotties/heart_and_ecg.json',
-                  fit: BoxFit.cover,
-                  height: 350.0,
-                  width: 400,
-                ),
-              ),
-              SizedBox(
-                width: 250,
-                child: TextField(
-                  controller: controllerEmail,
-                  onEditingComplete: () => setState(() {}),
-                  decoration: InputDecoration(
-                    labelText: "Email address",
-                    hintText: "Your email",
+                SizedBox(
+                  child: Lottie.asset(
+                    'assets/lotties/heart_and_ecg.json',
+                    fit: BoxFit.cover,
+                    height: 350.0,
+                    width: 400,
                   ),
                 ),
-              ),
+                SizedBox(
+                  width: 250,
+                  child: TextField(
+                    controller: controllerEmail,
+                    onEditingComplete: () => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: "Email address",
+                      hintText: "Your email",
+                    ),
+                  ),
+                ),
 
-              SizedBox(
-                width: 250,
+                SizedBox(
+                  width: 250,
 
-                child: TextField(
-                  controller: controllerPassword,
-                  obscureText: !passwordVisible,
-                  onEditingComplete: () => setState(() {}),
-                  decoration: InputDecoration(
-                    hintText: "Enter your account's password",
-                    labelText: "Password",
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          passwordVisible = !passwordVisible;
-                        });
-                      },
-                      icon: Icon(
-                        passwordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                  child: TextField(
+                    controller: controllerPassword,
+                    obscureText: !passwordVisible,
+                    onEditingComplete: () => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: "Enter your account's password",
+                      labelText: "Password",
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            passwordVisible = !passwordVisible;
+                          });
+                        },
+                        icon: Icon(
+                          passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
                 Padding(padding: EdgeInsetsGeometry.all(4)),
-              Center(
-                child: FilledButton(
-                  onPressed: () async {
-                    var user;
-                    print("attempting log in");
-                    user = await signIn();
+                Center(
+                  child: FilledButton(
+                    onPressed: () async {
+                      var user;
+                      print("attempting log in");
+                      user = await signIn();
 
-                    if (user != null) {
-                      Navigator.pushReplacement(
+                      if (user != null) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => WidgetTree()),
+                        );
+                      }
+                    },
+
+                    child: Text("Already have an account? Log in"),
+                  ),
+                ),
+                Padding(padding: EdgeInsetsGeometry.all(4)),
+                Center(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => WidgetTree()),
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return SignUpPage();
+                          },
+                        ),
                       );
-                    }
-                  },
+                    },
 
-                  child: Text("Already have an account? Log in"),
+                    child: Text("Don't have an account? Try signing up"),
+                  ),
                 ),
-              ),
-                Padding(padding: EdgeInsetsGeometry.all(4)),
-              Center(
-                child: FilledButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return SignUpPage();
-                        },
-                      ),
-                    );
-                  },
-
-                  child: Text("Don't have an account? Try signing up"),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

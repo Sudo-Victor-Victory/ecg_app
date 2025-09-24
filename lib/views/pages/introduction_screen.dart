@@ -21,7 +21,7 @@ class IntroductionScreens extends StatelessWidget {
           ),
         ),
         backgroundColor: KColors.red,
-        centerTitle: true, // 👈 this is the magic
+        centerTitle: true,
       ),
       body: IntroductionScreen(
         pages: [
@@ -29,29 +29,45 @@ class IntroductionScreens extends StatelessWidget {
             title: 'Welcome to the start of empowering your health.',
             body:
                 'This is the home page. It gives you an overview of devices, recent sessions, and contact. You can always tap (fill this) to view this guide again.',
-            image: buildImage("images/ADD_IMAGE_LATER.png"),
-            decoration: getPageDecoration(),
+            image: _buildImage("Intro_Home.gif"),
+            decoration: getPageDecoration().copyWith(
+              imageFlex: 6, // bigger = more space for the image
+              bodyFlex: 2, // smaller = less space for the text
+              imagePadding: const EdgeInsets.only(top: 20),
+            ),
           ),
           PageViewModel(
             title: 'Bluetooth page',
             body:
                 'Here is where you can find and connect to your health devices like an ECG. Select the device you want and tap on it to attempt to connect.',
-            image: buildImage("images/ADD_IMAGE_LATER.png"),
-            decoration: getPageDecoration(),
+            image: _buildImage("Intro_Bluetooth.gif"),
+            decoration: getPageDecoration().copyWith(
+              imageFlex: 6, // bigger = more space for the image
+              bodyFlex: 2, // smaller = less space for the text
+              imagePadding: const EdgeInsets.only(top: 20),
+            ),
           ),
           PageViewModel(
             title: 'Real time charting',
             body:
                 'Once you connect to the device, we will chart the data in real time as we receive it. Do not worry - all the data is being saved so you can view it again.',
-            image: buildImage("images/ADD_IMAGE_LATER.png"),
-            decoration: getPageDecoration(),
+            image: _buildImage("Intro_RealTime.gif"),
+            decoration: getPageDecoration().copyWith(
+              imageFlex: 6, // bigger = more space for the image
+              bodyFlex: 2, // smaller = less space for the text
+              imagePadding: const EdgeInsets.only(top: 20),
+            ),
           ),
           PageViewModel(
             title: 'View previous charts',
             body:
                 "After a session is completed, you can view your session's chart anytime via the sessions page.",
-            image: buildImage("images/ADD_IMAGE_LATER.png"),
-            decoration: getPageDecoration(),
+            image: _buildImage("Intro_Historical.gif"),
+            decoration: getPageDecoration().copyWith(
+              imageFlex: 6, // bigger = more space for the image
+              bodyFlex: 2, // smaller = less space for the text
+              imagePadding: const EdgeInsets.only(top: 20),
+            ),
           ),
         ],
         onDone: () {
@@ -73,14 +89,17 @@ class IntroductionScreens extends StatelessWidget {
         done: const Text("Done", style: TextStyle(fontWeight: FontWeight.w600)),
         dotsDecorator: getDotsDecorator(),
 
-        globalFooter: const SizedBox(height: 25),
+        globalFooter: const SizedBox(height: 15),
       ),
     );
   }
 
   //widget to add the image on screen
-  Widget buildImage(String imagePath) {
-    return Center(child: Image.asset(imagePath, width: 450, height: 200));
+  Widget _buildImage(String assetName) {
+    return Image.asset(
+      'assets/images/$assetName',
+      fit: BoxFit.contain, // preserves aspect ratio
+    );
   }
 
   //method to customise the page style

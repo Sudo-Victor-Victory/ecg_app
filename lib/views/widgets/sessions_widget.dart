@@ -8,7 +8,8 @@ import 'package:ecg_app/views/widgets/historical_chart.dart';
 
 class SessionsTile extends StatefulWidget {
   final int? limit;
-  const SessionsTile({super.key, this.limit});
+  final bool isHomePage; // new param
+  const SessionsTile({super.key, this.limit, this.isHomePage = false});
 
   @override
   State<SessionsTile> createState() => _SessionsTileState();
@@ -54,13 +55,11 @@ class _SessionsTileState extends State<SessionsTile> {
   }) async {
     final sessionId = session['id'];
     setState(() => selectedSessionId = sessionId);
-
     //  Chunked fetching
     const int pageSize = 1000;
     int from = 0;
     int to = pageSize - 1;
     final allRows = <Map<String, dynamic>>[];
-
     // Without range & chunking we could not pull the 1000s of ecg_rows from
     // the postgres database.
     while (true) {
@@ -79,7 +78,12 @@ class _SessionsTileState extends State<SessionsTile> {
       to += pageSize;
     }
 
-    final startTime = DateTime.parse(session['start_time']).toLocal();
+    final startDate = DateTime.parse(session['start_time']).toLocal();
+    final endDate = DateTime.parse(session[KSessionColumns.endTime]).toLocal();
+    final duration = endDate.difference(startDate);
+    final unitOfTime = duration.inMinutes < 1 ? "Sec" : "Min";
+    final durationString =
+        "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} $unitOfTime";
 
     setState(() => selectedSessionId = null);
 
@@ -90,18 +94,17 @@ class _SessionsTileState extends State<SessionsTile> {
           appBar: AppBar(
             leading: BackButton(onPressed: () => Navigator.pop(context)),
             centerTitle: true,
-            backgroundColor: const Color(0xFF07A0C3),
+            backgroundColor: KColors.blueGreen,
             title: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
                   child: ScaledText(
-                    'Session ${DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime)}',
-
-                    baseSize: 18,
+                    chartBPM ? "BPM Chart " : "ECG Chart",
+                    baseSize: KTextSize.xl,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: KColors.eerieBlack,
                     ),
                   ),
                 ),
@@ -118,8 +121,9 @@ class _SessionsTileState extends State<SessionsTile> {
           ),
           body: HistoricalChart(
             ecgRows: allRows,
-            startTime: startTime,
+            startTime: startDate,
             isChartingBPM: chartBPM,
+            durationString: durationString,
           ),
         ),
       ),
@@ -130,10 +134,14 @@ class _SessionsTileState extends State<SessionsTile> {
     final startDate = DateTime.parse(session['start_time']).toLocal();
     final endDate = DateTime.parse(session[KSessionColumns.endTime]).toLocal();
     final duration = endDate.difference(startDate);
-    final startText = DateFormat('yyyy-MM-dd HH:mm').format(startDate);
-    final endText = DateFormat('yyyy-MM-dd HH:mm').format(endDate);
+    final startText = DateFormat('yy-MM-dd HH:mm').format(startDate);
+    final endText = DateFormat('yy-MM-dd HH:mm').format(endDate);
     final sessionId = session['id'];
-    final unitOfTime = duration.inMinutes < 1 ? "seconds" : "minutes";
+    final unitOfTime = duration.inMinutes < 1 ? "Sec" : "Min";
+    final durationString =
+        "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} $unitOfTime";
+
+    final cardPadding = widget.isHomePage ? 24.0 : 16.0;
 
     return Card(
       elevation: 3,
@@ -144,65 +152,77 @@ class _SessionsTileState extends State<SessionsTile> {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  const Image(
-                    image: AssetImage('assets/lotties/temp_img.jpg'),
-                    width: 50,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              padding: EdgeInsets.all(cardPadding),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.monitor_heart,
+                      size: 50,
+                      color: KColors.red,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ScaledText(
+                            "Session $index",
+                            baseSize: 20,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            softWrap: true,
+                            overflow: TextOverflow.visible,
+                          ),
+                          const SizedBox(height: 4),
+                          ScaledText(
+                            durationString,
+                            baseSize: 16,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                            softWrap: true,
+                            overflow: TextOverflow.visible,
+                          ),
+                          const SizedBox(height: 2),
+                          ScaledText(
+                            'Start: $startText\nEnd: $endText',
+                            baseSize: 16,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            softWrap: true,
+                            overflow: TextOverflow.visible,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        ScaledText(
-                          "Session $index",
-
-                          baseSize: 18,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        IconButton(
+                          icon: const Icon(
+                            Icons.show_chart,
+                            color: KColors.blueGreen,
                           ),
+                          onPressed: () =>
+                              _retrieveDataAndChart(session, chartBPM: false),
                         ),
-
-                        const SizedBox(height: 2),
-                        ScaledText(
-                          "Duration: ${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')} $unitOfTime",
-                          baseSize: 18,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        ScaledText(
-                          'Start: $startText, End: $endText',
-
-                          baseSize: 18,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.favorite, color: KColors.red),
+                          onPressed: () =>
+                              _retrieveDataAndChart(session, chartBPM: true),
                         ),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.show_chart, color: Colors.lightBlue),
-                    onPressed: () =>
-                        _retrieveDataAndChart(session, chartBPM: false),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.favorite, color: Colors.red),
-                    onPressed: () =>
-                        _retrieveDataAndChart(session, chartBPM: true),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
+
             // Overlays clipboard anim ontop of the selected session
-            if (selectedSessionId == sessionId) ...[
+            if (selectedSessionId == sessionId)
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -221,7 +241,6 @@ class _SessionsTileState extends State<SessionsTile> {
                   ),
                 ),
               ),
-            ],
           ],
         ),
       ),

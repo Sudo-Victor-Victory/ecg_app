@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
+import 'package:lottie/lottie.dart';
 
 class EcgStatusWidget extends StatelessWidget {
   const EcgStatusWidget({super.key});
@@ -25,12 +26,14 @@ class EcgStatusWidget extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(width: 2),
-
-              Icon(
-                Icons.circle,
-                color: isConnected ? Colors.green : Colors.red,
-                size: 14,
-              ),
+              isConnected
+                  ? Lottie.asset(
+                      'assets/lotties/ecg.json',
+                      fit: BoxFit.cover,
+                      height: 25.0,
+                      width: 25.0,
+                    )
+                  : Icon(Icons.circle, color: Colors.red, size: 14),
             ],
           ),
         );

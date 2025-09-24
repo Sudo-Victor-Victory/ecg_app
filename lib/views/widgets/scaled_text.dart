@@ -7,7 +7,8 @@ class ScaledText extends StatelessWidget {
   final TextStyle? style;
   final TextAlign? textAlign;
   final int? maxLines;
-
+  final TextOverflow? overflow; // ← new optional param
+  final bool? softWrap; // ← new optional param
   const ScaledText(
     this.text, {
     super.key,
@@ -15,6 +16,8 @@ class ScaledText extends StatelessWidget {
     this.style,
     this.textAlign,
     this.maxLines,
+    this.overflow, // ← pass in overflow type
+    this.softWrap, // ← accept softWrap
   });
 
   @override
@@ -39,11 +42,12 @@ class ScaledText extends StatelessWidget {
         return Text(
           text,
           maxLines: maxLines,
+          softWrap: softWrap ?? true, // ← use passed value, default to true
           textAlign: textAlign,
+          overflow: overflow ?? TextOverflow.ellipsis,
           style: (style ?? const TextStyle()).copyWith(
             fontSize: baseSize * sizeFactor,
           ),
-          overflow: TextOverflow.ellipsis,
         );
       },
     );

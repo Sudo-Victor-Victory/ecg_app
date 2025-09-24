@@ -168,12 +168,12 @@ class _EcgChartState extends State<EcgChart> {
       children: <Widget>[
         SafeArea(
           child: Container(
-            color: Colors.black,
+            color: KColors.eerieBlack,
             padding: const EdgeInsets.only(top: 20),
             child: SizedBox(
               height: 800,
               child: SfCartesianChart(
-                backgroundColor: Colors.black,
+                backgroundColor: KColors.eerieBlack,
                 plotAreaBorderWidth: 0,
                 margin: EdgeInsets.all(15),
                 primaryXAxis: NumericAxis(

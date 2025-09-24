@@ -1,6 +1,7 @@
 import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/utils/dialog_alert.dart';
 import 'package:ecg_app/views/pages/sign_up.dart';
+import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -22,110 +23,123 @@ class _LogInPageState extends State<LogInPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Log in", selectionColor: Color(0xFF1D1B14)),
-        backgroundColor: Color(0xFF07A0C3),
+        title: Center(
+          child: ScaledText(
+            "Sign in",
+            baseSize: KTextSize.xxxl,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: KColors.eerieBlack,
+            ),
+          ),
+        ),
+
+        backgroundColor: KColors.blueGreen,
       ),
       body: SingleChildScrollView(
-        child: FractionallySizedBox(
-          child: Column(
-            children: [
-              Center(
-                child: Text(
-                  "Welcome to\nReal Time ECG (RTECG)",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.teal,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
-                    fontSize: 30.0,
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom:
+                MediaQuery.of(context).viewInsets.bottom + 20, // extra space
+          ),
+          child: FractionallySizedBox(
+            child: Column(
+              children: [
+                Center(
+                  child: Text(
+                    "Welcome to\nReal Time ECG (RTECG)",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 30.0,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(
-                child: Lottie.asset(
-                  'assets/lotties/heart_and_ecg.json',
-                  fit: BoxFit.cover,
-                  height: 350.0,
-                  width: 400,
-                ),
-              ),
-              SizedBox(
-                width: 250,
-                child: TextField(
-                  controller: controllerEmail,
-                  onEditingComplete: () => setState(() {}),
-                  decoration: InputDecoration(
-                    labelText: "Email address",
-                    hintText: "Your email",
+                SizedBox(
+                  child: Lottie.asset(
+                    'assets/lotties/heart_and_ecg.json',
+                    fit: BoxFit.cover,
+                    height: 350.0,
+                    width: 400,
                   ),
                 ),
-              ),
+                SizedBox(
+                  width: 250,
+                  child: TextField(
+                    controller: controllerEmail,
+                    onEditingComplete: () => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: "Email address",
+                      hintText: "Your email",
+                    ),
+                  ),
+                ),
 
-              SizedBox(
-                width: 250,
+                SizedBox(
+                  width: 250,
 
-                child: TextField(
-                  controller: controllerPassword,
-                  obscureText: !passwordVisible,
-                  onEditingComplete: () => setState(() {}),
-                  decoration: InputDecoration(
-                    hintText: "Enter your account's password",
-                    labelText: "Password",
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          passwordVisible = !passwordVisible;
-                        });
-                      },
-                      icon: Icon(
-                        passwordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                  child: TextField(
+                    controller: controllerPassword,
+                    obscureText: !passwordVisible,
+                    onEditingComplete: () => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: "Enter your account's password",
+                      labelText: "Password",
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            passwordVisible = !passwordVisible;
+                          });
+                        },
+                        icon: Icon(
+                          passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                Padding(padding: EdgeInsetsGeometry.all(4)),
+                Center(
+                  child: FilledButton(
+                    onPressed: () async {
+                      var user;
+                      print("attempting log in");
+                      user = await signIn();
 
-              Center(
-                child: FilledButton(
-                  onPressed: () async {
-                    var user;
-                    print("attempting log in");
-                    user = await signIn();
+                      if (user != null) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => WidgetTree()),
+                        );
+                      }
+                    },
 
-                    if (user != null) {
-                      Navigator.pushReplacement(
+                    child: Text("Already have an account? Log in"),
+                  ),
+                ),
+                Padding(padding: EdgeInsetsGeometry.all(4)),
+                Center(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return WidgetTree();
+                            return SignUpPage();
                           },
                         ),
                       );
-                    }
-                  },
+                    },
 
-                  child: Text("Already have an account? Log in"),
+                    child: Text("Don't have an account? Try signing up"),
+                  ),
                 ),
-              ),
-              Center(
-                child: FilledButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return SignUpPage();
-                        },
-                      ),
-                    );
-                  },
-
-                  child: Text("Don't have an account? Try signing up"),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

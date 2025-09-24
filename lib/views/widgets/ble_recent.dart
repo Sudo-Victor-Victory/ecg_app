@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class RecentDevicesTile extends StatefulWidget {
-  const RecentDevicesTile({super.key});
+  final bool isHomePage; // new param
+
+  const RecentDevicesTile({super.key, this.isHomePage = false});
 
   @override
   State<RecentDevicesTile> createState() => _RecentDevicesTileState();
@@ -44,6 +46,8 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
 
   @override
   Widget build(BuildContext context) {
+    final imageWidth = widget.isHomePage ? 70.0 : 50.0;
+
     if (_devices.isEmpty) {
       return const Center(child: Text('No recent devices'));
     }
@@ -66,7 +70,11 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
               child: Row(
                 children: [
                   // temporary icon will replace.
-                  const Icon(Icons.watch, size: 40, color: Colors.blueAccent),
+                  Image(
+                    //               const Icon(Icons.monitor_heart, size: 40, color: KColors.red),
+                    image: const AssetImage('assets/lotties/temp_img.jpg'),
+                    width: imageWidth,
+                  ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(

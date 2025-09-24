@@ -1,26 +1,46 @@
-import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'package:ecg_app/data/classes/notifiers.dart';
 
-class BpmWidget extends StatefulWidget {
+class BpmWidget extends StatelessWidget {
   const BpmWidget({super.key});
 
   @override
-  State<BpmWidget> createState() => _BpmWidgetState();
-}
-
-class _BpmWidgetState extends State<BpmWidget> {
-  @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
+    return ValueListenableBuilder<int>(
       valueListenable: bpm,
       builder: (context, newBpm, child) {
         return Card(
           color: Colors.cyanAccent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadiusGeometry.circular(1),
-            side: BorderSide(color: Colors.redAccent, width: 2),
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: Colors.redAccent, width: 2),
           ),
-          child: Text(" 💖 BPM: $newBpm   "),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: 30,
+                  width: 30,
+                  child: Lottie.asset(
+                    'assets/lotties/heart_beat.json',
+                    repeat: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "BPM: $newBpm",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

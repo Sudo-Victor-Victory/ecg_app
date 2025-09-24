@@ -1,5 +1,7 @@
 import 'package:ecg_app/data/classes/constants.dart';
 import 'package:ecg_app/views/pages/ecg_chart.dart';
+import 'package:ecg_app/views/widgets/animated_card.dart';
+import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -7,12 +9,14 @@ class HistoricalChart extends StatefulWidget {
   final List<Map<String, dynamic>> ecgRows;
   final DateTime startTime;
   final bool isChartingBPM;
+  final String durationString;
 
   const HistoricalChart({
     super.key,
     required this.ecgRows,
     required this.startTime,
     required this.isChartingBPM,
+    required this.durationString,
   });
 
   @override
@@ -36,21 +40,20 @@ class _HistoricalChartState extends State<HistoricalChart> {
 
   // Time between samples from ESP32
   static const double sampleSpacing = KEcgConstants.sampleSpacingMs;
+
   @override
   void initState() {
     super.initState();
     chartData = widget.isChartingBPM ? _buildBpmPoints() : _buildEcgPoints();
-    yAxisBound =
-        chartData.map((p) => p.ecgValue).reduce((a, b) => a > b ? a : b) + 2;
 
     axisVisibleMin = chartData.first.ecgTime;
     axisVisibleMax = axisVisibleMin + 10000; // 10 sec window
+    yAxisBound = widget.isChartingBPM ? 150 : 4096; // fixed max for simplicity
 
     selectionBehavior = SelectionBehavior(enable: true);
   }
 
   List<EcgDataPoint> _buildEcgPoints() {
-    //Initialize the data source to the chart
     final dataPoints = <EcgDataPoint>[];
     final startMs = widget.startTime.millisecondsSinceEpoch.toDouble();
     for (var row in widget.ecgRows) {
@@ -63,8 +66,6 @@ class _HistoricalChartState extends State<HistoricalChart> {
         );
       }
     }
-
-    yAxisBound = 4096;
     return dataPoints;
   }
 
@@ -80,62 +81,117 @@ class _HistoricalChartState extends State<HistoricalChart> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SizedBox.expand(
-        child: SfCartesianChart(
-          backgroundColor: Colors.black,
-          plotAreaBorderWidth: 0,
-          primaryXAxis: NumericAxis(
-            labelFormat: '{value}',
-            title: AxisTitle(text: "Time"),
-            axisLabelFormatter: (AxisLabelRenderDetails details) {
-              final date = DateTime.fromMillisecondsSinceEpoch(
-                details.value.toInt(),
-              );
-              final label =
-                  "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}:${date.second.toString().padLeft(2, '0')}";
-              return ChartAxisLabel(
-                label,
-                const TextStyle(color: Colors.white),
-              );
-            },
-            onRendererCreated: (NumericAxisController controller) =>
-                axisController = controller,
+      body: Column(
+        children: [
+          // Info container above the chart
+          Container(
+            width: double.infinity,
+            color: KColors.eerieBlack,
 
-            initialVisibleMinimum: axisVisibleMin,
-            initialVisibleMaximum: axisVisibleMax,
-          ),
-          primaryYAxis: NumericAxis(
-            minimum: 0,
-            maximum: yAxisBound,
-            labelStyle: const TextStyle(color: Colors.white),
-            title: AxisTitle(text: widget.isChartingBPM ? "BPM" : "ECG Data"),
-          ),
-          tooltipBehavior: TooltipBehavior(enable: true),
-          zoomPanBehavior: ZoomPanBehavior(
-            enablePinching: true,
-            zoomMode: ZoomMode.x,
-            enablePanning: true,
-            enableDoubleTapZooming: true,
-          ),
-
-          series: [
-            LineSeries<EcgDataPoint, double>(
-              dataSource: chartData,
-              xValueMapper: (p, _) => p.ecgTime,
-              yValueMapper: (p, _) => p.ecgValue,
-              color: const Color.fromARGB(255, 228, 10, 10),
-              animationDuration: 0,
-              name: widget.isChartingBPM ? "BPM Value" : "ECG Value",
+            child: Column(
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 12,
+                  runSpacing: 6,
+                  children: [
+                    AnimatedCard(
+                      delay: 100,
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Center(
+                                child: ScaledText(
+                                  'Start: ${DateTime.fromMillisecondsSinceEpoch(chartData.first.ecgTime.toInt())}',
+                                  baseSize: KTextSize.lg,
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Center(
+                                child: ScaledText(
+                                  widget.durationString,
+                                  baseSize: KTextSize.lg,
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
-          ],
-          // Important. Sliding starts with selecting a point
-          // So all logic is dependant on it.
-          onSelectionChanged: (SelectionArgs args) => updateSelectedPoint(args),
-          // Important. After the initial swiping motion begins and we act on it.
-          // Thus using the updated axisVisibleMin/Max and direction we  swipe.
-          onPlotAreaSwipe: (ChartSwipeDirection direction) =>
-              performSwipe(direction),
-        ),
+          ),
+          Expanded(
+            child: SfCartesianChart(
+              backgroundColor: KColors.eerieBlack,
+              plotAreaBorderWidth: 0,
+              margin: const EdgeInsets.only(bottom: 40),
+              primaryXAxis: NumericAxis(
+                labelFormat: '{value}',
+                title: const AxisTitle(text: "Time"),
+                axisLabelFormatter: (AxisLabelRenderDetails details) {
+                  final date = DateTime.fromMillisecondsSinceEpoch(
+                    details.value.toInt(),
+                  );
+                  final label =
+                      "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}:${date.second.toString().padLeft(2, '0')}";
+                  return ChartAxisLabel(
+                    label,
+                    const TextStyle(color: Colors.white),
+                  );
+                },
+                onRendererCreated: (NumericAxisController controller) =>
+                    axisController = controller,
+                initialVisibleMinimum: axisVisibleMin,
+                initialVisibleMaximum: axisVisibleMax,
+              ),
+              primaryYAxis: NumericAxis(
+                minimum: 0,
+                maximum: yAxisBound,
+                labelStyle: const TextStyle(color: Colors.white),
+                title: AxisTitle(
+                  text: widget.isChartingBPM ? "BPM" : "ECG Data",
+                ),
+              ),
+              tooltipBehavior: TooltipBehavior(enable: true),
+              zoomPanBehavior: ZoomPanBehavior(
+                enablePinching: true,
+                zoomMode: ZoomMode.x,
+                enablePanning: true,
+                enableDoubleTapZooming: true,
+                enableSelectionZooming: false,
+              ),
+              series: [
+                LineSeries<EcgDataPoint, double>(
+                  dataSource: chartData,
+                  xValueMapper: (p, _) => p.ecgTime,
+                  yValueMapper: (p, _) => p.ecgValue,
+                  color: const Color.fromARGB(255, 228, 10, 10),
+                  animationDuration: 0,
+                  name: widget.isChartingBPM ? "BPM Value" : "ECG Value",
+                ),
+              ],
+              // Important. Sliding starts with selecting a point
+              // So all logic is dependant on it.
+              onSelectionChanged: (SelectionArgs args) =>
+                  updateSelectedPoint(args),
+              // Important. After the initial swiping motion begins and we act on it.
+              // Thus using the updated axisVisibleMin/Max and direction we  swipe.
+              onPlotAreaSwipe: (ChartSwipeDirection direction) =>
+                  performSwipe(direction),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -165,8 +221,8 @@ class _HistoricalChartState extends State<HistoricalChart> {
       isProgrammaticSelection = true;
       // Set the visible minimum and visible maximum to maintain
       // The selected point in the center of the viewport.
-      axisVisibleMin = axisVisibleMin + 20.toDouble();
-      axisVisibleMax = axisVisibleMax + 20.toDouble();
+      axisVisibleMin += 20;
+      axisVisibleMax += 20;
       // To update the visible maximum and visible minimum dynamically by using axis controller.
       axisController!.visibleMinimum = axisVisibleMin;
       axisController!.visibleMaximum = axisVisibleMax;
@@ -180,10 +236,10 @@ class _HistoricalChartState extends State<HistoricalChart> {
     // Executes when swiping the chart from left to right
     // Same logic as above
     else if (direction == ChartSwipeDirection.start &&
-        (axisVisibleMin - 20.toDouble()) >= 0) {
+        (axisVisibleMin - 20) >= 0) {
       setState(() {
-        axisVisibleMin = axisVisibleMin - 20.toDouble();
-        axisVisibleMax = axisVisibleMax - 20.toDouble();
+        axisVisibleMin -= 20;
+        axisVisibleMax -= 20;
         axisController!.visibleMinimum = axisVisibleMin;
         axisController!.visibleMaximum = axisVisibleMax;
         Future.delayed(const Duration(milliseconds: 20), () {

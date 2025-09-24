@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 
+/// Dynamically changes the size of text based on the textSize ValueNotifier.
 class ScaledText extends StatelessWidget {
   final String text;
   final double baseSize;
   final TextStyle? style;
   final TextAlign? textAlign;
   final int? maxLines;
-  final TextOverflow? overflow; // ← new optional param
-  final bool? softWrap; // ← new optional param
+  final TextOverflow? overflow;
+  final bool? softWrap;
+
   const ScaledText(
     this.text, {
     super.key,
@@ -16,8 +18,8 @@ class ScaledText extends StatelessWidget {
     this.style,
     this.textAlign,
     this.maxLines,
-    this.overflow, // ← pass in overflow type
-    this.softWrap, // ← accept softWrap
+    this.overflow,
+    this.softWrap,
   });
 
   @override
@@ -42,7 +44,7 @@ class ScaledText extends StatelessWidget {
         return Text(
           text,
           maxLines: maxLines,
-          softWrap: softWrap ?? true, // ← use passed value, default to true
+          softWrap: softWrap ?? true,
           textAlign: textAlign,
           overflow: overflow ?? TextOverflow.ellipsis,
           style: (style ?? const TextStyle()).copyWith(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 import 'package:lottie/lottie.dart';
 
+/// Display's a device's name & lottie anim while connected,
+/// otherwise says no device connected with a red dot.
 class EcgStatusWidget extends StatelessWidget {
   const EcgStatusWidget({super.key});
 

@@ -5,6 +5,7 @@ import 'package:ecg_app/views/widgets/scaled_text.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
+/// Utilizes SF chart to display chart data retrieved from Supabase
 class HistoricalChart extends StatefulWidget {
   final List<Map<String, dynamic>> ecgRows;
   final DateTime startTime;

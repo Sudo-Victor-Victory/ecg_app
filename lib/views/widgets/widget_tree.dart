@@ -93,7 +93,7 @@ class WidgetTree extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) {
-                        return SettingsPage(title: "Settings wow");
+                        return SettingsPage(title: "Settings");
                       },
                     ),
                   );

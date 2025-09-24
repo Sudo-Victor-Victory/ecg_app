@@ -1,6 +1,7 @@
 import 'package:ecg_app/views/widgets/widget_tree.dart';
 import 'package:flutter/material.dart';
 
+/// The navbar's nav logic
 class NavbarWidget extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;

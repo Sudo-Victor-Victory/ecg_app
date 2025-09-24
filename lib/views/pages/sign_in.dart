@@ -79,7 +79,6 @@ class _LogInPageState extends State<LogInPage> {
 
                 SizedBox(
                   width: 250,
-
                   child: TextField(
                     controller: controllerPassword,
                     obscureText: !passwordVisible,
@@ -146,6 +145,7 @@ class _LogInPageState extends State<LogInPage> {
     );
   }
 
+  /// Utilizes Supabase's auth to validate user creds and then manage session state
   Future<User?> signIn() async {
     try {
       final supabase = Supabase.instance.client;

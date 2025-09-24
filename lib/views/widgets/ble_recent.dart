@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+/// Used to display recently connected to devices
+/// On the home page it makes it more compact.
 class RecentDevicesTile extends StatefulWidget {
-  final bool isHomePage; // new param
+  final bool isHomePage;
 
   const RecentDevicesTile({super.key, this.isHomePage = false});
 
@@ -22,6 +24,7 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
     _loadRecentDevices();
   }
 
+  /// Accesses recently connected bluetooth devices from the user's phone
   Future<void> _loadRecentDevices() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('recent_devices') ?? [];
@@ -33,10 +36,10 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
     setState(() => _devices = parsed);
   }
 
+  /// Wrapper of BleEcgManager's bluetooth connect function
   Future<void> _connectTo(String id) async {
     final device = BluetoothDevice(remoteId: DeviceIdentifier(id));
     await BleEcgManager().connect(device);
-    // Optionally: show snackbar or navigate
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Connecting to ${device.remoteId}...')),
@@ -69,9 +72,7 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  // temporary icon will replace.
                   Image(
-                    //               const Icon(Icons.monitor_heart, size: 40, color: KColors.red),
                     image: const AssetImage('assets/lotties/temp_img.jpg'),
                     width: imageWidth,
                   ),

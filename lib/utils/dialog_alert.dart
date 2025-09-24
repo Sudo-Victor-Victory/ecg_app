@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Wrapped showDialog widget to be visually consistent
 Future<void> showErrorDialog(
   BuildContext context,
   String title,

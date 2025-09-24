@@ -19,7 +19,7 @@ class _SignUpPageState extends State<SignUpPage> {
   TextEditingController lastNameController = TextEditingController();
 
   bool passwordVisible = false;
-  static const List<String> list = <String>[
+  static const List<String> signUpReasons = <String>[
     'For fun',
     'I like ECGs',
     'user',
@@ -131,7 +131,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     dropdownValue = value!;
                   });
                 },
-                items: list.map<DropdownMenuItem<String>>((String value) {
+                items: signUpReasons.map<DropdownMenuItem<String>>((
+                  String value,
+                ) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),

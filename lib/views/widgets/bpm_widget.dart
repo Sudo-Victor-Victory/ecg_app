@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:ecg_app/data/classes/notifiers.dart';
 
+/// Displays the BPM received while a device is connected
 class BpmWidget extends StatelessWidget {
   const BpmWidget({super.key});
 
@@ -25,12 +26,14 @@ class BpmWidget extends StatelessWidget {
                 SizedBox(
                   height: 30,
                   width: 30,
+
                   child: Lottie.asset(
                     'assets/lotties/heart_beat.json',
                     repeat: true,
                   ),
                 ),
                 const SizedBox(width: 8),
+
                 Text(
                   "BPM: $newBpm",
                   style: const TextStyle(

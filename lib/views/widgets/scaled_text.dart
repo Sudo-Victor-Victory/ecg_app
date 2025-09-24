@@ -10,6 +10,7 @@ class ScaledText extends StatelessWidget {
   final int? maxLines;
   final TextOverflow? overflow;
   final bool? softWrap;
+
   const ScaledText(
     this.text, {
     super.key,

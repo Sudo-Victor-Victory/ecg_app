@@ -24,6 +24,7 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
     _loadRecentDevices();
   }
 
+  /// Accesses recently connected bluetooth devices from the user's phone
   Future<void> _loadRecentDevices() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('recent_devices') ?? [];
@@ -35,10 +36,10 @@ class _RecentDevicesTileState extends State<RecentDevicesTile> {
     setState(() => _devices = parsed);
   }
 
+  /// Wrapper of BleEcgManager's bluetooth connect function
   Future<void> _connectTo(String id) async {
     final device = BluetoothDevice(remoteId: DeviceIdentifier(id));
     await BleEcgManager().connect(device);
-    // Optionally: show snackbar or navigate
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Connecting to ${device.remoteId}...')),

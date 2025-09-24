@@ -26,12 +26,14 @@ class BpmWidget extends StatelessWidget {
                 SizedBox(
                   height: 30,
                   width: 30,
+
                   child: Lottie.asset(
                     'assets/lotties/heart_beat.json',
                     repeat: true,
                   ),
                 ),
                 const SizedBox(width: 8),
+
                 Text(
                   "BPM: $newBpm",
                   style: const TextStyle(

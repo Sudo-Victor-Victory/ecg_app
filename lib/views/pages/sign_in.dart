@@ -37,6 +37,11 @@ class _LogInPageState extends State<LogInPage> {
         backgroundColor: KColors.blueGreen,
       ),
       body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom:
+                MediaQuery.of(context).viewInsets.bottom + 20, // extra space
+          ),
         child: FractionallySizedBox(
           child: Column(
             children: [
@@ -97,7 +102,7 @@ class _LogInPageState extends State<LogInPage> {
                   ),
                 ),
               ),
-
+                Padding(padding: EdgeInsetsGeometry.all(4)),
               Center(
                 child: FilledButton(
                   onPressed: () async {
@@ -116,6 +121,7 @@ class _LogInPageState extends State<LogInPage> {
                   child: Text("Already have an account? Log in"),
                 ),
               ),
+                Padding(padding: EdgeInsetsGeometry.all(4)),
               Center(
                 child: FilledButton(
                   onPressed: () {
@@ -135,6 +141,7 @@ class _LogInPageState extends State<LogInPage> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

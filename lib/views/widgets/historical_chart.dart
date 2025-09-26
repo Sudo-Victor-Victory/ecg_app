@@ -47,6 +47,11 @@ class _HistoricalChartState extends State<HistoricalChart> {
     super.initState();
     chartData = widget.isChartingBPM ? _buildBpmPoints() : _buildEcgPoints();
 
+    // If somehow a session has no data, will not attempt to plot.
+    if (widget.ecgRows.isEmpty) {
+      chartData = [];
+      return;
+    }
     axisVisibleMin = chartData.first.ecgTime;
     axisVisibleMax = axisVisibleMin + 10000; // 10 sec window
     yAxisBound = widget.isChartingBPM ? 150 : 4096; // fixed max for simplicity
@@ -109,7 +114,9 @@ class _HistoricalChartState extends State<HistoricalChart> {
                             children: [
                               Center(
                                 child: ScaledText(
-                                  'Start: ${DateTime.fromMillisecondsSinceEpoch(chartData.first.ecgTime.toInt())}',
+                                  chartData.isNotEmpty
+                                      ? 'Start: ${DateTime.fromMillisecondsSinceEpoch(chartData.first.ecgTime.toInt())}'
+                                      : 'No data available',
                                   baseSize: KTextSize.lg,
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
@@ -133,64 +140,71 @@ class _HistoricalChartState extends State<HistoricalChart> {
             ),
           ),
           Expanded(
-            child: SfCartesianChart(
-              backgroundColor: KColors.eerieBlack,
-              plotAreaBorderWidth: 0,
-              margin: const EdgeInsets.only(bottom: 40),
-              primaryXAxis: NumericAxis(
-                labelFormat: '{value}',
-                title: const AxisTitle(text: "Time"),
-                axisLabelFormatter: (AxisLabelRenderDetails details) {
-                  final date = DateTime.fromMillisecondsSinceEpoch(
-                    details.value.toInt(),
-                  );
-                  final label =
-                      "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}:${date.second.toString().padLeft(2, '0')}";
-                  return ChartAxisLabel(
-                    label,
-                    const TextStyle(color: Colors.white),
-                  );
-                },
-                onRendererCreated: (NumericAxisController controller) =>
-                    axisController = controller,
-                initialVisibleMinimum: axisVisibleMin,
-                initialVisibleMaximum: axisVisibleMax,
-              ),
-              primaryYAxis: NumericAxis(
-                minimum: 0,
-                maximum: yAxisBound,
-                labelStyle: const TextStyle(color: Colors.white),
-                title: AxisTitle(
-                  text: widget.isChartingBPM ? "BPM" : "ECG Data",
-                ),
-              ),
-              tooltipBehavior: TooltipBehavior(enable: true),
-              zoomPanBehavior: ZoomPanBehavior(
-                enablePinching: true,
-                zoomMode: ZoomMode.x,
-                enablePanning: true,
-                enableDoubleTapZooming: true,
-                enableSelectionZooming: false,
-              ),
-              series: [
-                LineSeries<EcgDataPoint, double>(
-                  dataSource: chartData,
-                  xValueMapper: (p, _) => p.ecgTime,
-                  yValueMapper: (p, _) => p.ecgValue,
-                  color: const Color.fromARGB(255, 228, 10, 10),
-                  animationDuration: 0,
-                  name: widget.isChartingBPM ? "BPM Value" : "ECG Value",
-                ),
-              ],
-              // Important. Sliding starts with selecting a point
-              // So all logic is dependant on it.
-              onSelectionChanged: (SelectionArgs args) =>
-                  updateSelectedPoint(args),
-              // Important. After the initial swiping motion begins and we act on it.
-              // Thus using the updated axisVisibleMin/Max and direction we  swipe.
-              onPlotAreaSwipe: (ChartSwipeDirection direction) =>
-                  performSwipe(direction),
-            ),
+            child: chartData.isNotEmpty
+                ? SfCartesianChart(
+                    backgroundColor: KColors.eerieBlack,
+                    plotAreaBorderWidth: 0,
+                    margin: const EdgeInsets.only(bottom: 40),
+                    primaryXAxis: NumericAxis(
+                      labelFormat: '{value}',
+                      title: const AxisTitle(text: "Time"),
+                      axisLabelFormatter: (AxisLabelRenderDetails details) {
+                        final date = DateTime.fromMillisecondsSinceEpoch(
+                          details.value.toInt(),
+                        );
+                        final label =
+                            "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}:${date.second.toString().padLeft(2, '0')}";
+                        return ChartAxisLabel(
+                          label,
+                          const TextStyle(color: Colors.white),
+                        );
+                      },
+                      onRendererCreated: (NumericAxisController controller) =>
+                          axisController = controller,
+                      initialVisibleMinimum: axisVisibleMin,
+                      initialVisibleMaximum: axisVisibleMax,
+                    ),
+                    primaryYAxis: NumericAxis(
+                      minimum: 0,
+                      maximum: yAxisBound,
+                      labelStyle: const TextStyle(color: Colors.white),
+                      title: AxisTitle(
+                        text: widget.isChartingBPM ? "BPM" : "ECG Data",
+                      ),
+                    ),
+                    tooltipBehavior: TooltipBehavior(enable: true),
+                    zoomPanBehavior: ZoomPanBehavior(
+                      enablePinching: true,
+                      zoomMode: ZoomMode.x,
+                      enablePanning: true,
+                      enableDoubleTapZooming: true,
+                      enableSelectionZooming: false,
+                    ),
+                    series: [
+                      LineSeries<EcgDataPoint, double>(
+                        dataSource: chartData,
+                        xValueMapper: (p, _) => p.ecgTime,
+                        yValueMapper: (p, _) => p.ecgValue,
+                        color: const Color.fromARGB(255, 228, 10, 10),
+                        animationDuration: 0,
+                        name: widget.isChartingBPM ? "BPM Value" : "ECG Value",
+                      ),
+                    ],
+                    // Important. Sliding starts with selecting a point
+                    // So all logic is dependant on it.
+                    onSelectionChanged: (SelectionArgs args) =>
+                        updateSelectedPoint(args),
+                    // Important. After the initial swiping motion begins and we act on it.
+                    // Thus using the updated axisVisibleMin/Max and direction we  swipe.
+                    onPlotAreaSwipe: (ChartSwipeDirection direction) =>
+                        performSwipe(direction),
+                  )
+                : const Center(
+                    child: Text(
+                      'No chart data',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
           ),
         ],
       ),

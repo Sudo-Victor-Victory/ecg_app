@@ -56,4 +56,25 @@ void main() {
     expect(find.textContaining('Session 1'), findsOneWidget);
     expect(find.textContaining('Duration:'), findsOneWidget);
   });
+
+  // Not an ideal test since the unit under test is the duration.
+  // Will extract duration logic into its own function to further
+  // test in another PR
+  testWidgets('Session tile shows correct duration', (tester) async {
+    // Insert a mock session
+    await Supabase.instance.client.from('ecg_session').insert({
+      'id': 'AAAA-BBBB-CCCC-DDDD',
+      'start_time': '2025-09-24T10:00:00Z',
+      'end_time': '2025-09-24T10:10:00Z',
+      'user_id': '4708d9ec-d546-49b9-b506-3605b7a70e6a',
+    });
+
+    await tester.pumpWidget(const MaterialApp(home: SessionsTile()));
+
+    await tester.pumpAndSettle();
+
+    // The first session card should be visible
+    expect(find.textContaining('Session 1'), findsOneWidget);
+    expect(find.textContaining('Duration: 10:00 Min'), findsOneWidget);
+  });
 }

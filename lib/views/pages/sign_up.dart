@@ -149,6 +149,9 @@ class _SignUpPageState extends State<SignUpPage> {
 
                     if (newUser != null) {
                       firstName = firstNameController.text;
+                      if (!mounted) {
+                        return;
+                      }
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(

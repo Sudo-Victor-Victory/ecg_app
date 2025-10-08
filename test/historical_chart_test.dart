@@ -24,6 +24,7 @@ void main() {
             ecgRows: ecgRows,
             startTime: now,
             isChartingBPM: false,
+            // Duration is not validated but is required  so ignore the value
             durationString: 'Duration: 0:05 Min',
           ),
         ),
@@ -45,7 +46,7 @@ void main() {
       expect(dataPoints?.any((p) => (p as dynamic).ecgValue == 1597), isTrue);
     });
 
-    testWidgets('renders nothing when no ECG rows provided', (tester) async {
+    testWidgets('renders nothing when 0 are ECG rows provided', (tester) async {
       // Given
       final now = DateTime(2025, 9, 26, 10, 0, 0);
       List<Map<String, dynamic>> ecgRows = [];
@@ -55,6 +56,7 @@ void main() {
             ecgRows: ecgRows,
             startTime: now,
             isChartingBPM: false,
+            // Duration is not validated but is required  so ignore the value
             durationString: 'Duration: 0:05 Min',
           ),
         ),
